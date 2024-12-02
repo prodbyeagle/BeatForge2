@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter Tight, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  margin-right: 2px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--theme-tertiary);
+  opacity: 0.3;
+  border-radius: 50px;
+  transition: all 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-tertiary);
+  opacity: 0.5;
+  width: 8px;
+}
+
+/* Hide on default */
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* When scrollbar corner meets */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-tertiary) transparent;
+}
+
+/* Hover effect for Firefox */
+*:hover {
+  scrollbar-color: var(--theme-tertiary) transparent;
+}
+
+/* Custom class for containers that should show scrollbar */
+.show-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--theme-tertiary);
+  opacity: 0.3;
+}
+
+.show-scrollbar:hover::-webkit-scrollbar-thumb {
+  opacity: 0.5;
+}
