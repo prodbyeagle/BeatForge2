@@ -24,13 +24,13 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
   const tracks: Track[] = beats.map(beat => ({
     id: beat.path || `beat-${Math.random().toString(36).substr(2, 9)}`, // Ensure unique ID
     title: beat.name.replace(/\.[^/.]+$/, ''), // Remove file extension
-    artist: 'Unknown Artist', // Could be extracted from metadata later
+    artist: beat.artist || 'Unknown Artist',
     path: beat.path,
-    duration: '0:00', // Could be extracted from audio file later
+    duration: beat.duration || '0:00',
     bpm: 0, // Could be extracted from audio file later
     key: 'Unknown', // Could be extracted from audio file later
     format: beat.format,
-    coverArt: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&q=80' // Default cover art
+    coverArt: beat.coverArt
   }));
 
   // Filter tracks based on search query
@@ -66,7 +66,7 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
           onDoubleClick={() => handlePlayPause(track)}
         >
           {/* Blur overlay */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-xl" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
 
           {/* Play button overlay */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

@@ -6,6 +6,8 @@ import { ulid } from 'ulid';
 
 // Extend DirEntry type to include path
 interface ExtendedDirEntry extends DirEntry {
+  lastModified: number;
+  size: number;
   path: string;
 }
 
@@ -33,33 +35,99 @@ const BeatsContext = createContext<BeatsContextType | undefined>(undefined);
 const store = new LazyStore('settings.json');
 
 const SUPPORTED_FORMATS = ['.mp3', '.wav', '.flac', '.aiff', '.m4a', '.ogg'];
+const EXCLUDED_FORMATS = ['.flp'];  // FL Studio project files
 
 const extractMetadata = async (filePath: string, format: string): Promise<Partial<Beat>> => {
+  if (!filePath) {
+    throw new Error('File path is required for metadata extraction');
+  }
+
   try {
-    const fileBuffer = await readFile(filePath);
-    const metadata = await musicMetadata.parseBuffer(new Uint8Array(fileBuffer), { mimeType: format });
+    // Normalize the path to handle Windows paths
+    const normalizedPath = filePath.replace(/\\/g, '/');
     
-    // Extract cover art
-    let coverArt = 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&q=80';
-    if (metadata.common.picture && metadata.common.picture.length > 0) {
-      const pic = metadata.common.picture[0];
-      coverArt = `data:${pic.format};base64,${Buffer.from(pic.data).toString('base64')}`;
+    const fileBuffer = await readFile(normalizedPath);
+    const mimeTypes: { [key: string]: string } = {
+      '.mp3': 'audio/mpeg',
+      '.wav': 'audio/wav',
+      '.flac': 'audio/flac',
+      '.aiff': 'audio/aiff',
+      '.m4a': 'audio/mp4',
+      '.ogg': 'audio/ogg'
+    };
+    const mimeType = mimeTypes[format.toLowerCase()] || `audio/${format.slice(1)}`;
+    const metadata = await musicMetadata.parseBuffer(new Uint8Array(fileBuffer), { mimeType });
+
+    // Log full metadata for debugging
+    console.log('Raw metadata:', {
+      format: {
+        duration: metadata.format.duration,
+        bitrate: metadata.format.bitrate,
+        sampleRate: metadata.format.sampleRate,
+        numberOfChannels: metadata.format.numberOfChannels
+      },
+      common: metadata.common
+    });
+
+    // Smart artist detection
+    let artist = 'prodbyeagle';  // Default to prodbyeagle since these are your beats
+
+    // If metadata explicitly specifies a different artist, use that instead
+    if (metadata.common.artist && metadata.common.artist !== 'prodbyeagle') {
+      artist = metadata.common.artist;
     }
 
-    return {
-      artist: metadata.common.artist || 'Unknown Artist',
-      duration: metadata.format.duration ? 
-        `${Math.floor(metadata.format.duration / 60)}:${Math.floor(metadata.format.duration % 60).toString().padStart(2, '0')}` 
-        : '0:00',
+    // Extract cover art
+    let coverArt = '';
+
+    try {
+      if (metadata.common.picture?.[0]) {
+        const picture = metadata.common.picture[0];
+        
+        if (picture.data && picture.data.length > 0) {
+          try {
+            // Convert to base64
+            const rawData = picture.data instanceof Uint8Array 
+              ? picture.data 
+              : new Uint8Array(picture.data);
+            
+            let binary = '';
+            rawData.forEach(byte => binary += String.fromCharCode(byte));
+            const base64 = btoa(binary);
+            
+            if (base64) {
+              const format = picture.format.startsWith('image/') ? picture.format : `image/${picture.format}`;
+              coverArt = `data:${format};base64,${base64}`;
+            }
+          } catch (error) {
+            // Silent fail - will use default cover
+          }
+        }
+      }
+    } catch (error) {
+      // Silent fail - will use default cover
+    }
+
+    // Format duration
+    const duration = metadata.format.duration || 0;
+    const minutes = Math.floor(duration / 60);
+    const seconds = Math.floor(duration % 60);
+    const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+    const result = {
+      artist,
+      duration: formattedDuration,
       coverArt
     };
+
+    console.log('Processed metadata:', {
+      file: normalizedPath.split('/').pop(),
+      ...result
+    });
+
+    return result;
   } catch (error) {
-    console.warn(`Could not extract metadata for ${filePath}:`, error);
-    return {
-      artist: 'Unknown Artist',
-      duration: '0:00',
-      coverArt: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&q=80'
-    };
+    throw error;
   }
 };
 
@@ -67,44 +135,70 @@ const extractMetadata = async (filePath: string, format: string): Promise<Partia
 const isValidAudioFile = (entry: ExtendedDirEntry): boolean => {
   if (!entry.name) return false;
   const extension = entry.name.toLowerCase().slice(entry.name.lastIndexOf('.'));
-  return SUPPORTED_FORMATS.includes(extension);
+  return SUPPORTED_FORMATS.includes(extension) && !EXCLUDED_FORMATS.includes(extension);
 };
 
 const loadBeats = async (folders: string[]): Promise<Beat[]> => {
   const allBeats: Beat[] = [];
+  const loadErrors: string[] = [];
   
   for (const folder of folders) {
     try {
       let entries: ExtendedDirEntry[];
       try {
-        entries = await readDir(folder) as ExtendedDirEntry[];
+        // Normalize the path to handle spaces and special characters
+        const normalizedPath = decodeURIComponent(folder).replace(/\\/g, '/');
+        entries = await readDir(normalizedPath) as ExtendedDirEntry[];
       } catch (accessError) {
-        console.warn(`Cannot access folder ${folder}:`, accessError);
+        const errorMessage = `Cannot access folder ${folder}: ${
+          accessError instanceof Error ? accessError.message : 'Unknown error'
+        }`;
+        
+        // Collect detailed error information
+        loadErrors.push(errorMessage);
+        
         // Skip this folder and continue with others
         continue;
       }
       
       const processEntry = async (entry: ExtendedDirEntry) => {
-        // Ensure entry has a name and is a valid audio file
+        // Skip if it's a FL Studio project file
+        if (!entry.name || entry.name.toLowerCase().endsWith('.flp')) {
+          return;
+        }
+
+        // For file entries, construct the full path if missing
+        if (entry.isFile && !entry.path) {
+          entry.path = `${folder}/${entry.name}`.replace(/\\/g, '/');
+        }
+
         if (isValidAudioFile(entry)) {
           try {
             // Generate unique ID using ULID
             const beatId = ulid();
             
-            // Extract metadata
-            const metadata = await extractMetadata(entry.path, entry.name.slice(entry.name.lastIndexOf('.')));
+            // Get file format
+            const format = entry.name.slice(entry.name.lastIndexOf('.'));
             
-            allBeats.push({
+            // Extract metadata
+            const metadata = await extractMetadata(entry.path, format);
+            
+            const beat: Beat = {
               id: beatId,
               name: entry.name,
               path: entry.path,
-              format: entry.name.slice(entry.name.lastIndexOf('.')),
-              size: 0, // TODO: Add file size when available
-              lastModified: Date.now(),
-              ...metadata // Spread extracted metadata
-            });
+              format: format,
+              size: entry.size || 0,
+              lastModified: entry.lastModified || Date.now(),
+              ...metadata
+            };
+
+            allBeats.push(beat);
           } catch (metadataError) {
-            console.warn(`Could not process beat ${entry.name}:`, metadataError);
+            const errorMessage = `Could not process beat ${entry.name}: ${
+              metadataError instanceof Error ? metadataError.message : 'Unknown error'
+            }`;
+            loadErrors.push(errorMessage);
           }
         }
       };
@@ -120,7 +214,10 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
               const subEntries = await readDir(entry.path) as ExtendedDirEntry[];
               await processEntries(subEntries);
             } catch (subDirError) {
-              console.warn(`Cannot access subdirectory ${entry.path}:`, subDirError);
+              const errorMessage = `Cannot access subdirectory ${entry.path}: ${
+                subDirError instanceof Error ? subDirError.message : 'Unknown error'
+              }`;
+              loadErrors.push(errorMessage);
             }
           }
         }
@@ -128,8 +225,16 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
 
       await processEntries(entries);
     } catch (error) {
-      console.error(`Unexpected error reading folder ${folder}:`, error);
+      const errorMessage = `Unexpected error reading folder ${folder}: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`;
+      loadErrors.push(errorMessage);
     }
+  }
+  
+  // If there were any errors, throw them to be handled by the caller
+  if (loadErrors.length > 0) {
+    throw new Error(`Encountered ${loadErrors.length} errors while loading beats:\n${loadErrors.join('\n')}`);
   }
   
   return allBeats;
@@ -148,7 +253,11 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
       const loadedBeats = await loadBeats(savedFolders);
       setBeats(loadedBeats);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'An unknown error occurred while loading beats';
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -24,20 +24,20 @@
     "core:window:allow-minimize",
     "dialog:default",
     "store:default",
-    "fs:default"
-  ],
-  "allowlist": {
-    "all": false,
-    "fs": {
-      "all": false,
-      "readFile": true,
-      "readDir": true,
-      "scope": [
-        "D:\\BEATS DATA\\*",
-        "D:\\BEATS DATA\\@prodbyeagle Die Library\\*",
-        "C:\\Users\\*\\Music\\*",
-        "$HOME/Music/*"
+    "fs:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "D:\\**"
+        },
+        {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$LOCALDATA/**"
+        }
       ]
     }
-  }
+  ]
 }

@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter Tight, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Space Grotesk, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  user-select: none;
 }
 
 /* Modern Scrollbar */
