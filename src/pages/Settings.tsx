@@ -1,4 +1,4 @@
-import { FolderOpen, Trash2, Palette, ChevronRight, Type, RefreshCcw } from 'lucide-react';
+import { FolderOpen, Trash2, Palette, ChevronRight, RefreshCcw } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import Button from '../components/Button';
@@ -17,41 +17,13 @@ const Settings = () => {
   const { refreshBeats } = useBeats();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
-  const [isFontModalOpen, setIsFontModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isIndexing, setIsIndexing] = useState(false);
-  const [selectedFont, setSelectedFont] = useState('Inter Tight');
   const [isClearIndexModalOpen, setIsClearIndexModalOpen] = useState(false);
 
   useEffect(() => {
     loadBeatFolders();
-    loadFont();
   }, []);
-
-  const loadFont = async () => {
-    try {
-      const savedFont = await store.get<string>('font');
-      if (savedFont) {
-        setSelectedFont(savedFont);
-        document.documentElement.style.fontFamily = `${savedFont}, system-ui, sans-serif`;
-      }
-    } catch (error) {
-      console.error('Error loading font:', error);
-    }
-  };
-
-  useEffect(() => {
-    const saveFont = async () => {
-      try {
-        await store.set('font', selectedFont);
-        await store.save();
-        document.documentElement.style.fontFamily = `${selectedFont}, system-ui, sans-serif`;
-      } catch (error) {
-        console.error('Error saving font:', error);
-      }
-    };
-    saveFont();
-  }, [selectedFont]);
 
   const loadBeatFolders = async () => {
     try {
@@ -115,7 +87,6 @@ const Settings = () => {
     try {
       await store.clear();
       await store.set('beatFolders', beatFolders);
-      await store.set('font', selectedFont);
       await store.save();
 
       const beatStore = new LazyStore('beat-index.json');
@@ -168,17 +139,6 @@ const Settings = () => {
     );
   };
 
-  const fonts = [
-    { name: 'Inter Tight', value: 'Inter Tight' },
-    { name: 'Inter', value: 'Inter' },
-    { name: 'Space Grotesk', value: 'Space Grotesk' },
-  ];
-
-  const handleFontChange = (value: string) => {
-    setSelectedFont(value);
-    setIsFontModalOpen(false);
-  };
-
   return (
     <div className="bg-[var(--theme-background)] text-[var(--theme-text)]">
       <div className="max-w-5xl mx-auto p-8">
@@ -214,17 +174,6 @@ const Settings = () => {
                       ))}
                     </div>
                   </div>
-                </div>
-                <ChevronRight className="w-5 h-5 opacity-50" />
-              </button>
-
-              <button
-                onClick={() => setIsFontModalOpen(true)}
-                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-[var(--theme-surface-hover)] transition-all duration-300"
-              >
-                <div className="flex items-center gap-3">
-                  <Type className="w-5 h-5" />
-                  <span className="text-sm font-medium">Font: {selectedFont}</span>
                 </div>
                 <ChevronRight className="w-5 h-5 opacity-50" />
               </button>
@@ -405,29 +354,6 @@ const Settings = () => {
               </div>
             ))}
           </div>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={isFontModalOpen}
-        onClose={() => setIsFontModalOpen(false)}
-        title="Select Font"
-      >
-        <div className="grid grid-cols-1 gap-2 p-2 max-h-[300px] overflow-y-auto">
-          {fonts.map((font) => (
-            <button
-              key={font.name}
-              onClick={() => handleFontChange(font.value)}
-              className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(var(--theme-quaternary-rgb),0.25)] ${selectedFont === font.value
-                ? 'border-[var(--theme-border)] bg-[var(--theme-surface)]'
-                : 'border-transparent hover:bg-[var(--theme-surface-hover)]'
-                }`}
-              style={{ fontFamily: font.value }}
-            >
-              <span className="text-xl">Aa</span>
-              <span className="text-lg">{font.name}</span>
-            </button>
-          ))}
         </div>
       </Modal>
 
