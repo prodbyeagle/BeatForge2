@@ -65,51 +65,6 @@ const PlayerControls = ({
 
   useEffect(() => {
     if (audioRef.current) {
-      if (isPlaying) {
-        setIsLoading(true);
-        audioRef.current.play()
-          .catch(error => {
-            console.error('Error playing audio:', error);
-            setIsLoading(false);
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
-      } else {
-        audioRef.current.pause();
-      }
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    if (audioRef.current && currentTrack) {
-      setHasPlayedMusic(true);
-      setIsLoading(true);
-
-      if (!currentTrack.isMetadataLoaded) {
-        loadMetadata(currentTrack.id);
-      }
-
-      const fileUrl = convertFileSrc(currentTrack.path);
-      audioRef.current.src = fileUrl;
-
-      if (isPlaying) {
-        audioRef.current.play()
-          .catch(error => {
-            console.error('Error playing audio:', error);
-            setIsLoading(false);
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
-      } else {
-        setIsLoading(false);
-      }
-    }
-  }, [currentTrack, isPlaying]);
-
-  useEffect(() => {
-    if (audioRef.current) {
       audioRef.current.volume = localVolume;
 
       const handleTimeUpdate = () => {
@@ -141,6 +96,21 @@ const PlayerControls = ({
       };
     }
   }, [settings.volume, localVolume]);
+
+  useEffect(() => {
+    if (audioRef.current && currentTrack) {
+      setHasPlayedMusic(true);
+      setIsLoading(true);
+
+      if (!currentTrack.isMetadataLoaded) {
+        loadMetadata(currentTrack.id);
+      }
+
+      const fileUrl = convertFileSrc(currentTrack.path);
+      audioRef.current.src = fileUrl;
+      setIsLoading(false);
+    }
+  }, [currentTrack]);
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
