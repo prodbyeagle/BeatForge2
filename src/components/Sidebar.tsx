@@ -1,55 +1,33 @@
 import { useState } from 'react';
-import { Library, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Library, Settings, Music2Icon } from 'lucide-react';
 
 interface SidebarProps {
-  activePage: 'library' | 'settings';
-  onNavigate: (page: 'library' | 'settings') => void;
+  activePage: 'library' | 'albums' | 'settings';
+  onNavigate: (page: 'library' | 'albums' | 'settings') => void;
 }
 
 const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const menuItems = [
     { icon: <Library size={24} />, label: 'Library', id: 'library' as const },
+    { icon: <Music2Icon size={24} />, label: 'Albums', id: 'albums' as const },
     { icon: <Settings size={24} />, label: 'Settings', id: 'settings' as const },
   ];
 
-  const handleNavigate = (pageId: 'library' | 'settings') => {
+  const handleNavigate = (pageId: 'library' | 'albums' | 'settings') => {
     onNavigate(pageId);
   };
 
   return (
     <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className={`
-        h-screen bg-[var(--theme-surface)] backdrop-blur-2xl
-        shadow-[1px_0_20px_rgba(0,0,0,0.1)]
+        h-screen bg-[var(--theme-background)] backdrop-blur-2xl
         transition-all duration-300 ease-in-out
         flex flex-col relative
         ${isCollapsed ? 'w-[72px]' : 'w-[260px]'}
       `}
     >
-      {/* Collapse Button */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`
-          absolute -right-3 top-20 z-10
-          w-6 h-6 rounded-md 
-          bg-[var(--theme-surface)]
-          shadow-lg hover:shadow-xl
-          flex items-center justify-center
-          text-[var(--theme-text)]
-          hover:text-[var(--theme-text)]
-          hover:scale-110
-          transition-all duration-200
-          ${isHovered ? 'opacity-100' : 'opacity-0'}
-        `}
-      >
-        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
-
       {/* Header */}
       <div className="h-16 flex items-center px-5 relative">
         <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--theme-border)] to-transparent" />
@@ -90,8 +68,8 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
                 transition-all duration-200
                 group relative
                 ${isActive
-                ? 'bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-hover)]'
-                : 'hover:bg-[var(--theme-surface-hover)]'
+                  ? 'bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-hover)]'
+                  : 'hover:bg-[var(--theme-surface-hover)]'
                 }
                 ${!isActive && !isCollapsed && 'hover:translate-x-1.5'}
               `}
