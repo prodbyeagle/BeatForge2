@@ -24,7 +24,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`
-        h-screen bg-[var(--theme-primary)]/80 backdrop-blur-2xl
+        h-screen bg-[var(--theme-surface)] backdrop-blur-2xl
         shadow-[1px_0_20px_rgba(0,0,0,0.1)]
         transition-all duration-300 ease-in-out
         flex flex-col relative
@@ -37,11 +37,11 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
         className={`
           absolute -right-3 top-20 z-10
           w-6 h-6 rounded-md 
-          bg-[var(--theme-secondary)]
+          bg-[var(--theme-surface)]
           shadow-lg hover:shadow-xl
           flex items-center justify-center
-          text-[var(--theme-tertiary)]/70
-          hover:text-[var(--theme-tertiary)]
+          text-[var(--theme-text)]
+          hover:text-[var(--theme-text)]
           hover:scale-110
           transition-all duration-200
           ${isHovered ? 'opacity-100' : 'opacity-0'}
@@ -52,12 +52,12 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
 
       {/* Header */}
       <div className="h-16 flex items-center px-5 relative">
-        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--theme-tertiary)]/10 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--theme-border)] to-transparent" />
         <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'gap-3'}`}>
           <div
             className={`
               w-8 h-8 rounded-xl
-              bg-gradient-to-br from-[var(--theme-tertiary)] to-[var(--theme-quaternary)]
+              bg-gradient-to-br from-[var(--theme-border)] to-[var(--theme-accent)]
               flex items-center justify-center flex-shrink-0
               cursor-pointer shadow-lg
               hover:shadow-xl hover:scale-105
@@ -65,10 +65,10 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
             `}
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
-            <span className="text-sm font-bold tracking-wider text-[var(--theme-secondary)]">BF</span>
+            <span className="text-sm font-bold tracking-wider text-[var(--theme-background-hover)]">BF</span>
           </div>
           {!isCollapsed && (
-            <span className="font-semibold tracking-wide whitespace-nowrap text-[var(--theme-tertiary)]">
+            <span className="font-semibold tracking-wide whitespace-nowrap text-[var(--theme-text)]">
               BeatForge
             </span>
           )}
@@ -84,14 +84,14 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
               key={item.id}
               onClick={() => handleNavigate(item.id)}
               className={`
-                text-base flex items-center
+                text flex items-center
                 ${isCollapsed ? 'justify-center' : 'gap-3'}
                 p-3 rounded-xl
                 transition-all duration-200
                 group relative
                 ${isActive
-                  ? 'bg-[var(--theme-quaternary)]/10 hover:bg-[var(--theme-quaternary)]/15'
-                  : 'hover:bg-[var(--theme-quaternary)]/5'
+                ? 'bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-hover)]'
+                : 'hover:bg-[var(--theme-surface-hover)]'
                 }
                 ${!isActive && !isCollapsed && 'hover:translate-x-1.5'}
               `}
@@ -100,8 +100,8 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
                 flex items-center justify-center w-6
                 transition-all duration-200
                 ${isActive
-                  ? 'text-[var(--theme-tertiary)]'
-                  : 'text-[var(--theme-tertiary)]/60 group-hover:text-[var(--theme-tertiary)]'
+                  ? 'text-[var(--theme-text)]'
+                  : 'text-[var(--theme-text)] group-hover:text-[var(--theme-text)]'
                 }
                 ${!isActive && 'group-hover:scale-110'}
               `}>
@@ -109,11 +109,11 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
               </div>
               {!isCollapsed && (
                 <span className={`
-                  text-base font-medium tracking-wide
+                  text font-medium tracking-wide
                   transition-colors duration-200
                   ${isActive
-                    ? 'text-[var(--theme-tertiary)]'
-                    : 'text-[var(--theme-tertiary)]/60 group-hover:text-[var(--theme-tertiary)]'
+                    ? 'text-[var(--theme-text)]'
+                    : 'text-[var(--theme-text)] group-hover:text-[var(--theme-text)]'
                   }
                 `}>
                   {item.label}
@@ -122,7 +122,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
               {isActive && (
                 <div className="
                   absolute left-0 top-1/2 -translate-y-1/2
-                  w-1 h-8 bg-gradient-to-b from-[var(--theme-tertiary)] to-[var(--theme-quaternary)]
+                  w-1 h-8 bg-gradient-to-b from-[var(--theme-border)] to-[var(--theme-accent)]
                   rounded-r-full shadow-lg
                   animate-pulse
                 " />
@@ -135,12 +135,12 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
       {/* Footer */}
       {!isCollapsed && (
         <div className="p-5 mb-6 relative">
-          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--theme-tertiary)]/10 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--theme-border)] to-transparent" />
           <div className="text-xs space-y-1">
-            <p className="font-medium text-[var(--theme-tertiary)]/70 hover:text-[var(--theme-tertiary)] transition-colors">
+            <p className="font-medium text-[var(--theme-text)] hover:text-[var(--theme-text)] transition-colors">
               BeatForge v1.0.0
             </p>
-            <p className="font-medium text-[var(--theme-tertiary)]/50 hover:text-[var(--theme-tertiary)]/70 transition-colors">
+            <p className="font-medium text-[var(--theme-text)] hover:text-[var(--theme-text)] transition-colors">
               Made with ♥ by @prodbyeagle
             </p>
           </div>

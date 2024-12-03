@@ -1,322 +1,700 @@
 {
   "themes": [
     {
-      "name": "Classic Theme",
-      "description": "This was the original theme from the beatforge v1 App.",
+      "name": "Gruvbox Dark",
+      "description": "Retro groove color scheme",
+      "author": "morhetz",
+      "values": [
+        {
+          "name": "primary",
+          "color": "#d79921",
+          "opacity": 0.1,
+          "gradient": {
+            "from": "#d79921",
+            "to": "#b8bb26",
+            "direction": "135deg"
+          }
+        },
+        {
+          "name": "secondary",
+          "color": "#b8bb26",
+          "opacity": 0.15
+        },
+        {
+          "name": "tertiary",
+          "color": "#ebdbb2",
+          "opacity": 0.2
+        },
+        {
+          "name": "quaternary",
+          "color": "#83a598",
+          "opacity": 0.25
+        }
+      ],
+      "colors": {
+        "background": {
+          "base": "#282828",
+          "hover": "#3c3836"
+        },
+        "surface": {
+          "base": "#1d2021",
+          "hover": "#3c3836",
+          "active": "#3c3836"
+        },
+        "primary": {
+          "base": "#d79921",
+          "hover": "#fabd2f",
+          "active": "#b57614",
+          "disabled": "#665c54"
+        },
+        "secondary": {
+          "base": "#b8bb26",
+          "hover": "#d8e133",
+          "active": "#98971a",
+          "disabled": "#665c54"
+        },
+        "accent": {
+          "base": "#83a598",
+          "hover": "#93b7ac",
+          "active": "#458588",
+          "disabled": "#665c54"
+        },
+        "text": {
+          "base": "#ebdbb2",
+          "hover": "#fbf1c7",
+          "disabled": "#928374"
+        },
+        "border": "#3c3836",
+        "divider": "#3c3836",
+        "shadow": "rgba(0, 0, 0, 0.2)",
+        "overlay": "rgba(0, 0, 0, 0.5)",
+        "success": "#98971a",
+        "warning": "#d79921",
+        "error": "#cc241d",
+        "info": "#458588"
+      },
+      "custom": {
+        "beatCard": {
+          "base": "#1d2021",
+          "hover": "#3c3836"
+        },
+        "scrollbar": "#3c3836",
+        "scrollbarThumb": "#504945",
+        "scrollbarThumbHover": "#665c54",
+        "dropzone": {
+          "base": "rgba(215, 153, 33, 0.1)",
+          "active": "rgba(215, 153, 33, 0.2)"
+        }
+      }
+    },
+    {
+      "name": "AMOLED",
+      "description": "Pure black theme optimized for AMOLED displays",
+      "author": "@prodbyeagle",
+      "values": [
+        {
+          "name": "primary",
+          "color": "#00E5FF",
+          "opacity": 0.1,
+          "gradient": {
+            "from": "#00E5FF",
+            "to": "#2979FF",
+            "direction": "135deg"
+          }
+        },
+        {
+          "name": "secondary",
+          "color": "#2979FF",
+          "opacity": 0.15
+        },
+        {
+          "name": "tertiary",
+          "color": "#FFFFFF",
+          "opacity": 0.2
+        },
+        {
+          "name": "quaternary",
+          "color": "#00B8D4",
+          "opacity": 0.25
+        }
+      ],
+      "colors": {
+        "background": {
+          "base": "#000000",
+          "hover": "#121212"
+        },
+        "surface": {
+          "base": "#000000",
+          "hover": "#121212",
+          "active": "#121212"
+        },
+        "primary": {
+          "base": "#00E5FF",
+          "hover": "#18FFFF",
+          "active": "#00B8D4",
+          "disabled": "#424242"
+        },
+        "secondary": {
+          "base": "#2979FF",
+          "hover": "#448AFF",
+          "active": "#2962FF",
+          "disabled": "#424242"
+        },
+        "accent": {
+          "base": "#00E5FF",
+          "hover": "#18FFFF",
+          "active": "#00B8D4",
+          "disabled": "#424242"
+        },
+        "text": {
+          "base": "#FFFFFF",
+          "hover": "#E0E0E0",
+          "disabled": "#757575"
+        },
+        "border": "#121212",
+        "divider": "#121212",
+        "shadow": "rgba(0, 0, 0, 0.4)",
+        "overlay": "rgba(0, 0, 0, 0.7)",
+        "success": "#00E676",
+        "warning": "#FFD740",
+        "error": "#FF1744",
+        "info": "#00E5FF"
+      },
+      "custom": {
+        "beatCard": {
+          "base": "#000000",
+          "hover": "#121212"
+        },
+        "scrollbar": "#121212",
+        "scrollbarThumb": "#212121",
+        "scrollbarThumbHover": "#424242",
+        "dropzone": {
+          "base": "rgba(0, 229, 255, 0.1)",
+          "active": "rgba(0, 229, 255, 0.2)"
+        }
+      }
+    },
+    {
+      "name": "Catppuccin Mocha",
+      "description": "Soothing pastel theme for the night owls",
+      "author": "Catppuccin",
+      "values": [
+        {
+          "name": "primary",
+          "color": "#cba6f7",
+          "opacity": 0.1,
+          "gradient": {
+            "from": "#cba6f7",
+            "to": "#89b4fa",
+            "direction": "135deg"
+          }
+        },
+        {
+          "name": "secondary",
+          "color": "#89b4fa",
+          "opacity": 0.15
+        },
+        {
+          "name": "tertiary",
+          "color": "#f5e0dc",
+          "opacity": 0.2
+        },
+        {
+          "name": "quaternary",
+          "color": "#b4befe",
+          "opacity": 0.25
+        }
+      ],
+      "colors": {
+        "background": {
+          "base": "#1e1e2e",
+          "hover": "#313244"
+        },
+        "surface": {
+          "base": "#181825",
+          "hover": "#313244",
+          "active": "#313244"
+        },
+        "primary": {
+          "base": "#cba6f7",
+          "hover": "#d8b4ff",
+          "active": "#bd93f9",
+          "disabled": "#6c7086"
+        },
+        "secondary": {
+          "base": "#89b4fa",
+          "hover": "#97beff",
+          "active": "#7aa2f7",
+          "disabled": "#6c7086"
+        },
+        "accent": {
+          "base": "#f5c2e7",
+          "hover": "#ffd1ee",
+          "active": "#f2b4de",
+          "disabled": "#6c7086"
+        },
+        "text": {
+          "base": "#cdd6f4",
+          "hover": "#ffffff",
+          "disabled": "#6c7086"
+        },
+        "border": "#313244",
+        "divider": "#313244",
+        "shadow": "rgba(0, 0, 0, 0.2)",
+        "overlay": "rgba(0, 0, 0, 0.5)",
+        "success": "#a6e3a1",
+        "warning": "#f9e2af",
+        "error": "#f38ba8",
+        "info": "#89b4fa"
+      },
+      "custom": {
+        "beatCard": {
+          "base": "#181825",
+          "hover": "#313244"
+        },
+        "scrollbar": "#313244",
+        "scrollbarThumb": "#45475a",
+        "scrollbarThumbHover": "#585b70",
+        "dropzone": {
+          "base": "rgba(203, 166, 247, 0.1)",
+          "active": "rgba(203, 166, 247, 0.2)"
+        }
+      }
+    },
+    {
+      "name": "Catppuccin Macchiato",
+      "description": "Soothing pastel theme (Macchiato variant)",
+      "author": "Catppuccin",
+      "values": [
+        {
+          "name": "primary",
+          "color": "#c6a0f6",
+          "opacity": 0.1,
+          "gradient": {
+            "from": "#c6a0f6",
+            "to": "#8aadf4",
+            "direction": "135deg"
+          }
+        },
+        {
+          "name": "secondary",
+          "color": "#8aadf4",
+          "opacity": 0.15
+        },
+        {
+          "name": "tertiary",
+          "color": "#f4dbd6",
+          "opacity": 0.2
+        },
+        {
+          "name": "quaternary",
+          "color": "#b7bdf8",
+          "opacity": 0.25
+        }
+      ],
+      "colors": {
+        "background": {
+          "base": "#24273a",
+          "hover": "#363a4f"
+        },
+        "surface": {
+          "base": "#1e2030",
+          "hover": "#363a4f",
+          "active": "#363a4f"
+        },
+        "primary": {
+          "base": "#c6a0f6",
+          "hover": "#d3aeff",
+          "active": "#b889f4",
+          "disabled": "#6e738d"
+        },
+        "secondary": {
+          "base": "#8aadf4",
+          "hover": "#98b8ff",
+          "active": "#7c9ff4",
+          "disabled": "#6e738d"
+        },
+        "accent": {
+          "base": "#f5bde6",
+          "hover": "#ffcbed",
+          "active": "#f2a9e1",
+          "disabled": "#6e738d"
+        },
+        "text": {
+          "base": "#cad3f5",
+          "hover": "#ffffff",
+          "disabled": "#6e738d"
+        },
+        "border": "#363a4f",
+        "divider": "#363a4f",
+        "shadow": "rgba(0, 0, 0, 0.2)",
+        "overlay": "rgba(0, 0, 0, 0.5)",
+        "success": "#a6da95",
+        "warning": "#eed49f",
+        "error": "#ed8796",
+        "info": "#8aadf4"
+      },
+      "custom": {
+        "beatCard": {
+          "base": "#1e2030",
+          "hover": "#363a4f"
+        },
+        "scrollbar": "#363a4f",
+        "scrollbarThumb": "#494d64",
+        "scrollbarThumbHover": "#5b6078",
+        "dropzone": {
+          "base": "rgba(198, 160, 246, 0.1)",
+          "active": "rgba(198, 160, 246, 0.2)"
+        }
+      }
+    },
+    {
+      "name": "Catppuccin Frappé",
+      "description": "Soothing pastel theme (Frappé variant)",
+      "author": "Catppuccin",
+      "values": [
+        {
+          "name": "primary",
+          "color": "#ca9ee6",
+          "opacity": 0.1,
+          "gradient": {
+            "from": "#ca9ee6",
+            "to": "#8caaee",
+            "direction": "135deg"
+          }
+        },
+        {
+          "name": "secondary",
+          "color": "#8caaee",
+          "opacity": 0.15
+        },
+        {
+          "name": "tertiary",
+          "color": "#f2d5cf",
+          "opacity": 0.2
+        },
+        {
+          "name": "quaternary",
+          "color": "#babbf1",
+          "opacity": 0.25
+        }
+      ],
+      "colors": {
+        "background": {
+          "base": "#303446",
+          "hover": "#414559"
+        },
+        "surface": {
+          "base": "#292c3c",
+          "hover": "#414559",
+          "active": "#414559"
+        },
+        "primary": {
+          "base": "#ca9ee6",
+          "hover": "#d7acf4",
+          "active": "#bb8edc",
+          "disabled": "#737994"
+        },
+        "secondary": {
+          "base": "#8caaee",
+          "hover": "#99b7fc",
+          "active": "#7d99e4",
+          "disabled": "#737994"
+        },
+        "accent": {
+          "base": "#f4b8e4",
+          "hover": "#ffc6eb",
+          "active": "#ea9dcf",
+          "disabled": "#737994"
+        },
+        "text": {
+          "base": "#c6d0f5",
+          "hover": "#ffffff",
+          "disabled": "#737994"
+        },
+        "border": "#414559",
+        "divider": "#414559",
+        "shadow": "rgba(0, 0, 0, 0.2)",
+        "overlay": "rgba(0, 0, 0, 0.5)",
+        "success": "#a6d189",
+        "warning": "#e5c890",
+        "error": "#e78284",
+        "info": "#8caaee"
+      },
+      "custom": {
+        "beatCard": {
+          "base": "#292c3c",
+          "hover": "#414559"
+        },
+        "scrollbar": "#414559",
+        "scrollbarThumb": "#51576d",
+        "scrollbarThumbHover": "#626880",
+        "dropzone": {
+          "base": "rgba(202, 158, 230, 0.1)",
+          "active": "rgba(202, 158, 230, 0.2)"
+        }
+      }
+    },
+    {
+      "name": "Catppuccin Latte",
+      "description": "Soothing pastel theme (Light variant)",
+      "author": "Catppuccin",
+      "values": [
+        {
+          "name": "primary",
+          "color": "#8839ef",
+          "opacity": 0.1,
+          "gradient": {
+            "from": "#8839ef",
+            "to": "#1e66f5",
+            "direction": "135deg"
+          }
+        },
+        {
+          "name": "secondary",
+          "color": "#1e66f5",
+          "opacity": 0.15
+        },
+        {
+          "name": "tertiary",
+          "color": "#dc8a78",
+          "opacity": 0.2
+        },
+        {
+          "name": "quaternary",
+          "color": "#7287fd",
+          "opacity": 0.25
+        }
+      ],
+      "colors": {
+        "background": {
+          "base": "#eff1f5",
+          "hover": "#ccd0da"
+        },
+        "surface": {
+          "base": "#e6e9ef",
+          "hover": "#ccd0da",
+          "active": "#ccd0da"
+        },
+        "primary": {
+          "base": "#8839ef",
+          "hover": "#9547fa",
+          "active": "#7b2be8",
+          "disabled": "#9ca0b0"
+        },
+        "secondary": {
+          "base": "#1e66f5",
+          "hover": "#2b74ff",
+          "active": "#1158eb",
+          "disabled": "#9ca0b0"
+        },
+        "accent": {
+          "base": "#ea76cb",
+          "hover": "#f784d6",
+          "active": "#e168c0",
+          "disabled": "#9ca0b0"
+        },
+        "text": {
+          "base": "#4c4f69",
+          "hover": "#000000",
+          "disabled": "#9ca0b0"
+        },
+        "border": "#ccd0da",
+        "divider": "#ccd0da",
+        "shadow": "rgba(0, 0, 0, 0.2)",
+        "overlay": "rgba(0, 0, 0, 0.5)",
+        "success": "#40a02b",
+        "warning": "#df8e1d",
+        "error": "#d20f39",
+        "info": "#1e66f5"
+      },
+      "custom": {
+        "beatCard": {
+          "base": "#e6e9ef",
+          "hover": "#ccd0da"
+        },
+        "scrollbar": "#ccd0da",
+        "scrollbarThumb": "#bcc0cc",
+        "scrollbarThumbHover": "#acb0be",
+        "dropzone": {
+          "base": "rgba(136, 57, 239, 0.1)",
+          "active": "rgba(136, 57, 239, 0.2)"
+        }
+      }
+    },
+    {
+      "name": "Classic Theme Renewed",
+      "description": "Enhanced version of the original beatforge theme",
       "author": "@prodbyeagle",
       "values": [
         {
           "name": "primary",
           "color": "#635985",
-          "_comment": "Cards and Co."
+          "opacity": 0.1,
+          "gradient": {
+            "from": "#635985",
+            "to": "#443C68",
+            "direction": "135deg"
+          }
         },
         {
           "name": "secondary",
-          "color": "#443C68"
+          "color": "#443C68",
+          "opacity": 0.15
         },
         {
           "name": "tertiary",
-          "color": "#FFE6E6"
+          "color": "#FFE6E6",
+          "opacity": 0.2
         },
         {
           "name": "quaternary",
-          "color": "#E1AFD1"
+          "color": "#E1AFD1",
+          "opacity": 0.25
         }
-      ]
+      ],
+      "colors": {
+        "background": {
+          "base": "#1A1B1E",
+          "hover": "#2C2E33"
+        },
+        "surface": {
+          "base": "#25262B",
+          "hover": "#2C2E33",
+          "active": "#2C2E33"
+        },
+        "primary": {
+          "base": "#635985",
+          "hover": "#7B6FA6",
+          "active": "#574B75",
+          "disabled": "#443C68"
+        },
+        "secondary": {
+          "base": "#443C68",
+          "hover": "#574B75",
+          "active": "#383257",
+          "disabled": "#2C2E33"
+        },
+        "accent": {
+          "base": "#E1AFD1",
+          "hover": "#E8C1DE",
+          "active": "#D89DC4",
+          "disabled": "#B58BA7"
+        },
+        "text": {
+          "base": "#FFE6E6",
+          "hover": "#FFFFFF",
+          "disabled": "#A6A7AB"
+        },
+        "border": "#2C2E33",
+        "divider": "#2C2E33",
+        "shadow": "rgba(0, 0, 0, 0.2)",
+        "overlay": "rgba(0, 0, 0, 0.5)",
+        "success": "#40C057",
+        "warning": "#FAB005",
+        "error": "#FA5252",
+        "info": "#228BE6"
+      },
+      "custom": {
+        "beatCard": {
+          "base": "#25262B",
+          "hover": "#2C2E33"
+        },
+        "scrollbar": "#2C2E33",
+        "scrollbarThumb": "#443C68",
+        "scrollbarThumbHover": "#574B75",
+        "dropzone": {
+          "base": "rgba(99, 89, 133, 0.1)",
+          "active": "rgba(99, 89, 133, 0.2)"
+        }
+      }
     },
     {
       "name": "Dark Night",
       "description": "made by @dwhincandi",
+      "author": "@dwhincandi",
       "values": [
         {
           "name": "primary",
           "color": "#0B132B",
-          "_comment": "Cards and Co."
+          "opacity": 0.1,
+          "gradient": {
+            "from": "#0B132B",
+            "to": "#1C2541",
+            "direction": "135deg"
+          }
         },
         {
           "name": "secondary",
-          "color": "#1C2541"
+          "color": "#1C2541",
+          "opacity": 0.15
         },
         {
           "name": "tertiary",
-          "color": "#3A506B"
+          "color": "#5BC0BE",
+          "opacity": 0.2
         },
         {
           "name": "quaternary",
-          "color": "#140152"
+          "color": "#3A506B",
+          "opacity": 0.25
         }
-      ]
-    },
-    {
-      "name": "Catppuccin Mocha",
-      "description": "Warm dark theme with pastel colors (Catppuccin)",
-      "author": "Catppuccin",
-      "values": [
-        {
-          "name": "primary",
-          "color": "#1e1e2e",
-          "_comment": "Base"
+      ],
+      "colors": {
+        "background": {
+          "base": "#0B132B",
+          "hover": "#1C2541"
         },
-        {
-          "name": "secondary",
-          "color": "#181825",
-          "_comment": "Crust"
+        "surface": {
+          "base": "#1C2541",
+          "hover": "#3A506B",
+          "active": "#3A506B"
         },
-        {
-          "name": "tertiary",
-          "color": "#cdd6f4",
-          "_comment": "Text"
+        "primary": {
+          "base": "#0B132B",
+          "hover": "#1C2541",
+          "active": "#3A506B",
+          "disabled": "#1C2541"
         },
-        {
-          "name": "quaternary",
-          "color": "#89b4fa",
-          "_comment": "Blue"
+        "secondary": {
+          "base": "#1C2541",
+          "hover": "#3A506B",
+          "active": "#0B132B",
+          "disabled": "#1C2541"
+        },
+        "accent": {
+          "base": "#5BC0BE",
+          "hover": "#6FDBDA",
+          "active": "#47A3A1",
+          "disabled": "#3A506B"
+        },
+        "text": {
+          "base": "#FFFFFF",
+          "hover": "#5BC0BE",
+          "disabled": "#3A506B"
+        },
+        "border": "#1C2541",
+        "divider": "#1C2541",
+        "shadow": "rgba(0, 0, 0, 0.2)",
+        "overlay": "rgba(0, 0, 0, 0.5)",
+        "success": "#40C057",
+        "warning": "#FAB005",
+        "error": "#FA5252",
+        "info": "#228BE6"
+      },
+      "custom": {
+        "beatCard": {
+          "base": "#1C2541",
+          "hover": "#3A506B"
+        },
+        "scrollbar": "#1C2541",
+        "scrollbarThumb": "#3A506B",
+        "scrollbarThumbHover": "#5BC0BE",
+        "dropzone": {
+          "base": "rgba(11, 19, 43, 0.1)",
+          "active": "rgba(11, 19, 43, 0.2)"
         }
-      ]
-    },
-    {
-      "name": "Catppuccin Macchiato",
-      "description": "Balanced dark theme with pastel colors (Catppuccin)",
-      "author": "Catppuccin",
-      "values": [
-        {
-          "name": "primary",
-          "color": "#24273a",
-          "_comment": "Base"
-        },
-        {
-          "name": "secondary",
-          "color": "#181926",
-          "_comment": "Crust"
-        },
-        {
-          "name": "tertiary",
-          "color": "#cad3f5",
-          "_comment": "Text"
-        },
-        {
-          "name": "quaternary",
-          "color": "#8aadf4",
-          "_comment": "Blue"
-        }
-      ]
-    },
-    {
-      "name": "Catppuccin Frappé",
-      "description": "Cool dark theme with pastel colors (Catppuccin)",
-      "author": "Catppuccin",
-      "values": [
-        {
-          "name": "primary",
-          "color": "#303446",
-          "_comment": "Base"
-        },
-        {
-          "name": "secondary",
-          "color": "#232634",
-          "_comment": "Crust"
-        },
-        {
-          "name": "tertiary",
-          "color": "#c6d0f5",
-          "_comment": "Text"
-        },
-        {
-          "name": "quaternary",
-          "color": "#8caaee",
-          "_comment": "Blue"
-        }
-      ]
-    },
-    {
-      "name": "Catppuccin Latte",
-      "description": "Creamy light theme with pastel colors (Catppuccin)",
-      "author": "Catppuccin",
-      "warning": true,
-      "values": [
-        {
-          "name": "primary",
-          "color": "#eff1f5",
-          "_comment": "Base"
-        },
-        {
-          "name": "secondary",
-          "color": "#dce0e8",
-          "_comment": "Crust"
-        },
-        {
-          "name": "tertiary",
-          "color": "#4c4f69",
-          "_comment": "Text"
-        },
-        {
-          "name": "quaternary",
-          "color": "#1e66f5",
-          "_comment": "Blue"
-        }
-      ]
-    },
-    {
-      "name": "AMOLED Dark",
-      "description": "True black theme optimized for OLED/AMOLED displays",
-      "author": "BeatForge",
-      "values": [
-        {
-          "name": "primary",
-          "color": "#000000",
-          "_comment": "Pure Black Background"
-        },
-        {
-          "name": "secondary",
-          "color": "#121212",
-          "_comment": "Slightly lighter black for contrast"
-        },
-        {
-          "name": "tertiary",
-          "color": "#ffffff",
-          "_comment": "Pure white text for maximum contrast"
-        },
-        {
-          "name": "quaternary",
-          "color": "#bb00ff",
-          "_comment": "Cyan accent for vibrant highlights"
-        }
-      ]
-    },
-    {
-      "name": "Dracula Pro",
-      "description": "Professional dark theme with rich, vibrant colors",
-      "author": "Zeno Rocha",
-      "values": [
-        {
-          "name": "primary",
-          "color": "#22212C",
-          "_comment": "Background"
-        },
-        {
-          "name": "secondary",
-          "color": "#282A36",
-          "_comment": "Current Line"
-        },
-        {
-          "name": "tertiary",
-          "color": "#F8F8F2",
-          "_comment": "Foreground"
-        },
-        {
-          "name": "quaternary",
-          "color": "#BD93F9",
-          "_comment": "Purple"
-        }
-      ]
-    },
-    {
-      "name": "GitHub Dark",
-      "description": "GitHub's official dark theme, optimized for long coding sessions",
-      "author": "GitHub",
-      "values": [
-        {
-          "name": "primary",
-          "color": "#0D1117",
-          "_comment": "Canvas Default"
-        },
-        {
-          "name": "secondary",
-          "color": "#161B22",
-          "_comment": "Canvas Overlay"
-        },
-        {
-          "name": "tertiary",
-          "color": "#C9D1D9",
-          "_comment": "Foreground Default"
-        },
-        {
-          "name": "quaternary",
-          "color": "#58A6FF",
-          "_comment": "Accent"
-        }
-      ]
-    },
-    {
-      "name": "Nord Dark",
-      "description": "An arctic, north-bluish color palette",
-      "author": "Arctic Ice Studio",
-      "values": [
-        {
-          "name": "primary",
-          "color": "#2E3440",
-          "_comment": "Polar Night"
-        },
-        {
-          "name": "secondary",
-          "color": "#3B4252",
-          "_comment": "Polar Night Light"
-        },
-        {
-          "name": "tertiary",
-          "color": "#ECEFF4",
-          "_comment": "Snow Storm"
-        },
-        {
-          "name": "quaternary",
-          "color": "#88C0D0",
-          "_comment": "Frost"
-        }
-      ]
-    },
-    {
-      "name": "Gruvbox Dark",
-      "description": "Retro groove color scheme with soft contrast",
-      "author": "Pavel Pertsev",
-      "values": [
-        {
-          "name": "primary",
-          "color": "#282828",
-          "_comment": "Dark0"
-        },
-        {
-          "name": "secondary",
-          "color": "#3C3836",
-          "_comment": "Dark1"
-        },
-        {
-          "name": "tertiary",
-          "color": "#EBDBB2",
-          "_comment": "Light0"
-        },
-        {
-          "name": "quaternary",
-          "color": "#B8BB26",
-          "_comment": "Green"
-        }
-      ]
-    },
-    {
-      "name": "Tokyo Night",
-      "description": "A dark theme inspired by the lights of Downtown Tokyo",
-      "author": "Enkia",
-      "values": [
-        {
-          "name": "primary",
-          "color": "#1A1B26",
-          "_comment": "Background"
-        },
-        {
-          "name": "secondary",
-          "color": "#24283B",
-          "_comment": "Background Higher"
-        },
-        {
-          "name": "tertiary",
-          "color": "#A9B1D6",
-          "_comment": "Foreground"
-        },
-        {
-          "name": "quaternary",
-          "color": "#7AA2F7",
-          "_comment": "Blue"
-        }
-      ]
+      }
     }
   ]
 }

@@ -29,7 +29,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <BeatsProvider>
-        <div className="pt-8 flex h-screen bg-[var(--theme-primary)] text-[var(--theme-tertiary)]">
+        <div className="pt-8 flex h-screen bg-[var(--theme-background)] text-[var(--theme-text)]">
           <TitleBar />
           <div className="flex-1 flex overflow-hidden">
             <Sidebar

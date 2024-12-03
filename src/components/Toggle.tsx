@@ -26,7 +26,7 @@ const Toggle: React.FC<ToggleProps> = ({
       toggle: 'w-11 h-6',
       circle: 'w-4.5 h-4.5',
       translate: 'translate-x-5',
-      text: 'text-base'
+      text: 'text'
     },
     lg: {
       toggle: 'w-14 h-7',
@@ -53,11 +53,11 @@ const Toggle: React.FC<ToggleProps> = ({
           className={`
             ${sizes[size].toggle}
             rounded-full transition-all duration-300
-            border border-[var(--theme-tertiary)]/10
-            peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--theme-tertiary)]/20
+            border border-[var(--theme-border)]
+            peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--theme-border)]
             ${checked
-              ? 'bg-[var(--theme-tertiary)] bg-opacity-10'
-              : 'bg-[var(--theme-quaternary)]/5'
+              ? 'bg-[var(--theme-border)] bg-opacity-10'
+              : 'bg-[var(--theme-accent)]'
             }
             ${disabled ? 'opacity-50' : ''}
           `}
@@ -69,12 +69,12 @@ const Toggle: React.FC<ToggleProps> = ({
             rounded-full transition-all duration-300
             shadow-sm
             ${checked
-              ? `bg-[var(--theme-tertiary)] ${sizes[size].translate}`
-              : 'bg-[var(--theme-tertiary)]/50'
+              ? `bg-[var(--theme-border)] ${sizes[size].translate}`
+              : 'bg-[var(--theme-border)]'
             }
             ${!disabled && checked
-              ? 'shadow-[var(--theme-tertiary)]/20'
-              : 'shadow-[var(--theme-quaternary)]/10'
+              ? 'shadow-[var(--theme-border)]'
+              : 'shadow-[var(--theme-accent)]'
             }
           `}
         />
@@ -82,7 +82,7 @@ const Toggle: React.FC<ToggleProps> = ({
       {label && (
         <span className={`
           ${sizes[size].text}
-          text-[var(--theme-tertiary)]
+          text-[var(--theme-text)]
           ${disabled ? 'opacity-50' : ''}
         `}>
           {label}

@@ -27,13 +27,13 @@ const Button: React.FC<ButtonProps> = ({
   const getVariantStyles = (variant: ButtonVariant) => {
     switch (variant) {
       case 'primary':
-        return 'bg-[var(--theme-primary)] hover:bg-[var(--theme-primary)]/90 text-[var(--theme-tertiary)] ';
+        return 'bg-[var(--theme-primary)] hover:bg-[var(--theme-primary-hover)] text-[var(--theme-text-base)] ';
       case 'secondary':
-        return 'bg-[var(--theme-secondary)] hover:bg-[var(--theme-secondary)]/90 text-[var(--theme-tertiary)]';
+        return 'bg-[var(--theme-secondary)] hover:bg-[var(--theme-secondary-hover)] text-[var(--theme-text-base)]';
       case 'tertiary':
-        return 'bg-transparent hover:bg-[var(--theme-tertiary)]/5 text-[var(--theme-tertiary)] ';
+        return 'bg-transparent hover:bg-[var(--theme-surface-hover)] text-[var(--theme-text-base)] ';
       case 'quaternary':
-        return 'bg-transparent text-[var(--theme-tertiary)]/70 hover:text-[var(--theme-tertiary)] hover:bg-[var(--theme-tertiary)]';
+        return 'bg-transparent text-[var(--theme-text-base)] hover:text-[var(--theme-text-base)] hover:bg-[var(--theme-surface-hover)]';
       default:
         return '';
     }

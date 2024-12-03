@@ -23,7 +23,7 @@ const TitleBar: React.FC = () => {
       data-tauri-drag-region
       className="fixed top-0 left-0 right-0 h-9 
                 flex items-center justify-between 
-                bg-[var(--theme-primary)]/95 backdrop-blur-md
+                bg-[var(--theme-background)] backdrop-blur-md
                 z-50 px-3"
     >
       {/* Window Controls (Left Side) */}
@@ -82,15 +82,15 @@ const TitleBar: React.FC = () => {
         data-tauri-drag-region
       >
         <span className="text-xs font-medium tracking-wide 
-                      text-[var(--theme-tertiary)]/90 
+                      text-[var(--theme-text)]
                       transition-opacity duration-200
                       hover:opacity-100">
           BeatForge
         </span>
         <span className="text-[10px] font-medium px-1 py-0.5 
-                      rounded bg-[var(--theme-tertiary)]/10 
-                      text-[var(--theme-tertiary)]/50">
-          BETA
+                      rounded bg-[var(--theme-surface)] 
+                      text-[var(--theme-text)]">
+          INDEV
         </span>
       </div>
 

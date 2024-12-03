@@ -98,7 +98,7 @@ const PlayerControls = ({
       // Use Tauri's convertFileSrc to get a proper URL for local files
       const fileUrl = convertFileSrc(currentTrack.path);
       audioRef.current.src = fileUrl;
-      
+
       if (isPlaying) {
         audioRef.current.play()
           .catch(error => {
@@ -183,10 +183,10 @@ const PlayerControls = ({
     <div className="fixed bottom-0 left-0 right-0 p-4 px-52">
       <audio ref={audioRef} />
       <div className="max-w-screen-2xl mx-auto">
-        <div className="bg-[var(--theme-secondary)]/60 backdrop-blur-xl border border-[var(--theme-tertiary)] px-4 py-3 rounded-3xl shadow-lg">
+        <div className="bg-[var(--theme-surface)]/90 backdrop-blur-xl border border-[var(--theme-border)] px-4 py-3 rounded-3xl shadow-lg">
           {/* Timeline */}
           <div className="px-4 mb-3 flex items-center gap-3">
-            <span className="text-xs text-[var(--theme-tertiary)]/70 select-none">
+            <span className="text-xs text-[var(--theme-text)] select-none">
               {formatTime(currentTime)}
             </span>
             <input
@@ -195,9 +195,9 @@ const PlayerControls = ({
               max={duration || 100}
               value={currentTime}
               onChange={handleTimelineChange}
-              className="flex-1 h-1 appearance-none bg-[var(--theme-tertiary)]/10 rounded-full outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--theme-tertiary)] [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-transform"
+              className="flex-1 h-1 appearance-none bg-[var(--theme-border)] rounded-full outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--theme-border)] [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-transform"
             />
-            <span className="text-xs text-[var(--theme-tertiary)]/70 select-none">
+            <span className="text-xs text-[var(--theme-text)] select-none">
               {formatTime(duration)}
             </span>
           </div>
@@ -207,30 +207,30 @@ const PlayerControls = ({
             <div className="flex items-center gap-4 w-[240px] lg:w-[280px] min-w-0">
               {currentTrack ? (
                 <>
-                  <div 
-                    className={`w-12 h-12 bg-[var(--theme-secondary)] rounded-xl flex-shrink-0 bg-cover bg-center border border-[var(--theme-tertiary)]/10 relative ${isLoading ? 'animate-pulse' : ''}`}
-                    style={{ 
+                  <div
+                    className={`w-12 h-12 bg-[var(--theme-surface)] rounded-xl flex-shrink-0 bg-cover bg-center border border-[var(--theme-border)] relative ${isLoading ? 'animate-pulse' : ''}`}
+                    style={{
                       backgroundImage: currentTrack.coverArt ? `url(${currentTrack.coverArt})` : 'none',
-                      backgroundColor: !currentTrack.coverArt ? 'var(--theme-secondary)' : 'transparent'
+                      backgroundColor: !currentTrack.coverArt ? 'var(--theme-surface)' : 'transparent'
                     }}
                   >
                     {isLoading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-[var(--theme-secondary)]/50 backdrop-blur-sm rounded-xl">
-                        <div className="w-5 h-5 border-2 border-[var(--theme-tertiary)]/30 border-t-[var(--theme-tertiary)] rounded-full animate-spin" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-[var(--theme-surface)] backdrop-blur-sm rounded-xl">
+                        <div className="w-5 h-5 border-2 border-[var(--theme-border)] border-t-[var(--theme-border)] rounded-full animate-spin" />
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium truncate">{currentTrack.title || currentTrack.name}</h4>
-                    <p className="text-sm text-[var(--theme-tertiary)]/70 truncate">{currentTrack.artist || 'Unknown Artist'}</p>
+                    <p className="text-sm text-[var(--theme-text)] truncate">{currentTrack.artist || 'Unknown Artist'}</p>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="w-12 h-12 bg-[var(--theme-secondary)] rounded-xl flex-shrink-0 border border-[var(--theme-tertiary)]/10" />
+                  <div className="w-12 h-12 bg-[var(--theme-surface)] rounded-xl flex-shrink-0 border border-[var(--theme-border)]" />
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium truncate">No track playing</h4>
-                    <p className="text-sm text-[var(--theme-tertiary)]/70 truncate">Select a track to play</p>
+                    <p className="text-sm text-[var(--theme-text)] truncate">Select a track to play</p>
                   </div>
                 </>
               )}
@@ -238,8 +238,8 @@ const PlayerControls = ({
 
             {/* Playback Controls */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 size="sm"
                 onClick={onPrevious}
                 disabled={!currentTrack}
@@ -259,8 +259,8 @@ const PlayerControls = ({
                   <Play className="w-5 h-5 ml-0.5" />
                 )}
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 size="sm"
                 onClick={onNext}
                 disabled={!currentTrack}
@@ -271,8 +271,8 @@ const PlayerControls = ({
 
             {/* Volume Control */}
             <div className="flex items-center gap-2 w-[240px] lg:w-[280px] min-w-0 justify-end">
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 size="sm"
                 onClick={toggleMute}
                 className="flex-shrink-0"
@@ -291,7 +291,7 @@ const PlayerControls = ({
                   step="0.01"
                   value={localVolume}
                   onChange={handleVolumeChange}
-                  className="w-full h-1 appearance-none bg-[var(--theme-tertiary)]/10 rounded-full outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--theme-tertiary)] [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-transform"
+                  className="w-full h-1 appearance-none bg-[var(--theme-border)] rounded-full outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--theme-border)] [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-transform"
                 />
               </div>
             </div>

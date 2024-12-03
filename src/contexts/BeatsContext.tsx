@@ -77,8 +77,8 @@ const extractMetadata = async (filePath: string, format: string): Promise<Partia
     const mimeType = mimeTypes[format.toLowerCase()] || `audio/${format.slice(1)}`;
     const metadata = await musicMetadata.parseBuffer(new Uint8Array(fileBuffer), { mimeType });
 
-    let artist = 'prodbyeagle';
-    if (metadata.common.artist && metadata.common.artist !== 'prodbyeagle') {
+    let artist = '';
+    if (metadata.common.artist && metadata.common.artist !== '') {
       artist = metadata.common.artist;
     }
 
@@ -121,29 +121,21 @@ const extractMetadata = async (filePath: string, format: string): Promise<Partia
  * Creates a lightweight index of beats with basic information
  */
 const createBeatIndex = async (entry: ExtendedDirEntry): Promise<Beat | null> => {
-  console.log(`🔍 Processing file: ${entry.name}`);
-  
   if (!entry.name || entry.name.toLowerCase().endsWith('.flp')) {
-    console.log(`⏭️ Skipping ${entry.name}: FLP file or no name`);
     return null;
   }
 
   if (!entry.path) {
-    console.log(`⏭️ Skipping ${entry.name}: No path`);
     return null;
   }
 
   const format = entry.name.slice(entry.name.lastIndexOf('.')).toLowerCase();
   if (!SUPPORTED_FORMATS.includes(format)) {
-    console.log(`⏭️ Skipping ${entry.name}: Unsupported format ${format}`);
     return null;
   }
-
-  console.log(`✅ Creating index for ${entry.name} with path ${entry.path}`);
   
   try {
     const metadata = await extractMetadata(entry.path, format);
-    console.log(`📝 Extracted metadata for ${entry.name}`);
     
     return {
       id: ulid(),
@@ -190,49 +182,34 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
   let allBeats: Beat[] = [];
   const loadErrors: string[] = [];
 
-  console.log('🎵 Starting beat indexing process...');
-  console.log(`📂 Folders to scan: ${folders.length}`, folders);
-
   // Try to load from index first
   let existingBeats: Beat[] = [];
   try {
-    console.log('📑 Attempting to load from existing index...');
     const indexedBeats = await beatStore.get<Beat[]>('beats');
     if (indexedBeats && indexedBeats.length > 0) {
-      console.log(`✅ Successfully loaded ${indexedBeats.length} beats from index`);
       // Only keep beats from current folders
       existingBeats = indexedBeats.filter(beat => 
         folders.some(folder => beat.path.startsWith(folder))
       );
-      console.log(`📊 Kept ${existingBeats.length} beats from current folders`);
     }
   } catch (error) {
     console.warn('⚠️ Could not load beat index:', error);
   }
 
-  // Always scan folders to find new beats
-  console.log('🔍 Scanning folders for new beats...');
   const existingPaths = new Set(existingBeats.map(beat => beat.path));
 
   for (const folder of folders) {
-    console.log(`📂 Processing folder: ${folder}`);
     try {
       let entries: ExtendedDirEntry[];
       try {
-        // Normalize Windows paths for Tauri
         const normalizedPath = folder
-          .replace(/\\/g, '/'); // Replace backslashes with forward slashes
+          .replace(/\\/g, '/');
 
-        console.log(`🔍 Original path: ${folder}`);
-        console.log(`🔍 Normalized path: ${normalizedPath}`);
         entries = await readDir(normalizedPath) as ExtendedDirEntry[];
         entries = entries.map(entry => ({
           ...entry,
           path: `${normalizedPath}/${entry.name}`
         }));
-        entries.forEach(entry => {
-          console.log('🔹 Entry:', entry);
-        });
       } catch (accessError) {
         console.error(`❌ Cannot access folder ${folder}:`, accessError);
         loadErrors.push(`Cannot access folder ${folder}: ${accessError instanceof Error ? accessError.message : 'Unknown error'
@@ -241,17 +218,13 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
       }
 
       const processEntries = async (entries: ExtendedDirEntry[]) => {
-        console.log(`📂 Processing ${entries.length} entries`);
         for (const entry of entries) {
           if (entry.isFile) {
             try {
-              console.log(`📄 Processing file: ${entry.name}`);
               const beat = await createBeatIndex(entry);
               if (beat && !existingPaths.has(beat.path)) {
-                console.log(`✅ Successfully indexed beat: ${beat.name}`);
                 allBeats.push(beat);
               } else {
-                console.log(`⏭️ Skipped file: ${entry.name}`);
               }
             } catch (error) {
               console.error(`❌ Failed to index beat ${entry.name}:`, error);
@@ -260,7 +233,6 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
 
           if (entry.isDirectory) {
             try {
-              console.log(`📂 Entering subdirectory: ${entry.path}`);
               const subEntries = await readDir(entry.path) as ExtendedDirEntry[];
               await processEntries(subEntries);
             } catch (subDirError) {
@@ -273,7 +245,6 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
       };
 
       await processEntries(entries);
-      console.log(`✅ Finished processing folder: ${folder}`);
     } catch (error) {
       console.error(`❌ Error processing folder ${folder}:`, error);
       loadErrors.push(`Unexpected error reading folder ${folder}: ${error instanceof Error ? error.message : 'Unknown error'
@@ -286,10 +257,8 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
 
   // Save to index
   try {
-    console.log(`💾 Saving ${allBeats.length} beats to index...`);
     await beatStore.set('beats', allBeats);
     await beatStore.save();
-    console.log('✅ Successfully saved beat index');
   } catch (error) {
     console.error('❌ Could not save beat index:', error);
   }
@@ -299,7 +268,6 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
     throw new Error(`Encountered ${loadErrors.length} errors while loading beats:\n${loadErrors.join('\n')}`);
   }
 
-  console.log(`🎉 Beat indexing complete! Found ${allBeats.length} beats`);
   return allBeats;
 };
 
@@ -328,14 +296,11 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
   }, [beats]);
 
   const refreshBeats = useCallback(async () => {
-    console.log('🔄 Starting beats refresh...');
     setIsLoading(true);
     setError(null);
     try {
       const savedFolders = await settingsStore.get<string[]>('beatFolders') || [];
-      console.log('📂 Retrieved saved folders from settings:', savedFolders);
       const loadedBeats = await loadBeats(savedFolders);
-      console.log(`✅ Successfully loaded ${loadedBeats.length} beats`);
       setBeats(loadedBeats);
     } catch (err) {
       const errorMessage = err instanceof Error
@@ -346,7 +311,6 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
       setError(errorMessage);
     } finally {
       setIsLoading(false);
-      console.log('🏁 Beats refresh complete');
     }
   }, []);
 

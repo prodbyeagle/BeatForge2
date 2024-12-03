@@ -9,12 +9,12 @@ interface ModalProps {
   description?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  children, 
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  children,
   title,
-  description 
+  description
 }) => {
   const [show, setShow] = useState(false);
 
@@ -32,7 +32,7 @@ const Modal: React.FC<ModalProps> = ({
   if (!isOpen && !show) return null;
 
   return (
-    <div 
+    <div
       className={`
         fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6
         transition-[opacity,visibility] duration-300
@@ -40,7 +40,7 @@ const Modal: React.FC<ModalProps> = ({
       `}
     >
       {/* Backdrop */}
-      <div 
+      <div
         className={`
           fixed inset-0 bg-zinc-950/60 backdrop-blur-xl
           transition-[opacity] duration-300
@@ -48,16 +48,16 @@ const Modal: React.FC<ModalProps> = ({
         `}
         onClick={onClose}
       />
-      
+
       {/* Modal */}
-      <div 
+      <div
         className={`
           relative z-50 w-full max-w-lg transform rounded-2xl
-          bg-[var(--theme-secondary)]/80 backdrop-blur-2xl p-6
+          bg-[var(--theme-surface)] backdrop-blur-2xl p-6
           shadow-2xl transition-all duration-300
-          border border-[var(--theme-tertiary)]/10
-          ${isOpen 
-            ? 'opacity-100 translate-y-0 scale-100' 
+          border border-[var(--theme-border)]
+          ${isOpen
+            ? 'opacity-100 translate-y-0 scale-100'
             : 'opacity-0 translate-y-4 scale-95'
           }
         `}
@@ -71,7 +71,7 @@ const Modal: React.FC<ModalProps> = ({
               </h3>
             )}
             {description && (
-              <p className="mt-1.5 text-sm text-[var(--theme-tertiary)]/70">
+              <p className="mt-1.5 text-sm text-[var(--theme-text)]">
                 {description}
               </p>
             )}
@@ -79,8 +79,8 @@ const Modal: React.FC<ModalProps> = ({
           <button
             onClick={onClose}
             className="absolute right-5 top-5 rounded-full p-2 
-                     hover:bg-[var(--theme-tertiary)]/10 
-                     transition-colors duration-200"
+                    hover:bg-[var(--theme-surface)]
+                    transition-colors duration-200"
           >
             <X className="h-5 w-5 opacity-70" />
           </button>
