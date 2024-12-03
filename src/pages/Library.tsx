@@ -1,4 +1,4 @@
-import { Play, Pause, Trash2, Search, LayoutGrid, List, MoreVertical, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { Play, Pause, Search, LayoutGrid, List, MoreVertical, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { useState, useMemo, useRef } from 'react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
@@ -14,9 +14,16 @@ interface LibraryProps {
   isPlaying: boolean;
   onTrackSelect: (track: Track) => void;
   onPlayPause: () => void;
+  onGoToAlbum?: (album: string) => void;
 }
 
-const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: LibraryProps) => {
+const Library: React.FC<LibraryProps> = ({
+  currentTrack,
+  isPlaying,
+  onTrackSelect,
+  onPlayPause,
+  onGoToAlbum
+}) => {
   const { beats, isLoading, error, refreshBeats, updateBeat } = useBeats();
   const { settings, updateSettings } = useSettings();
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
@@ -33,7 +40,7 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
 
   const tracks: Track[] = useMemo(() => beats.map(beat => ({
     id: beat.id,
-    name: beat.name,
+    name: beat.name || beat.name.replace(/\.[^/.]+$/, ''),
     title: beat.title || beat.name.replace(/\.[^/.]+$/, ''),
     artist: beat.artist || 'Unknown Artist',
     album: beat.album || 'Unknown Album',
@@ -213,10 +220,16 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
               backgroundImage: `url(${track.coverArt || '/default-cover.png'})`
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60 backdrop-blur-md" />
             
             {currentTrack?.id === track.id && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <div 
+                className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPlayPause();
+                }}
+              >
                 <div className="w-12 h-12 rounded-full bg-[var(--theme-primary)] flex items-center justify-center">
                   {isPlaying ? (
                     <Pause className="w-6 h-6 text-white" />
@@ -259,31 +272,6 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
             <p className="text-xs opacity-50 truncate">
               {track.album || 'Unknown Album'}
             </p>
-          </div>
-
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
-            <Button
-              variant="secondary"
-              className="!p-2"
-              onClick={(e) => handleAnalyzeBPM(track, e)}
-              disabled={isAnalyzing !== null}
-            >
-              {isAnalyzing === track.id ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <span className="text-xs">BPM</span>
-              )}
-            </Button>
-            <Button
-              variant="secondary"
-              className="!p-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleContextMenu(e, track);
-              }}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       ))}
@@ -334,22 +322,22 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
             </div>
 
             <div className="flex items-center gap-8">
-              <div className="flex items-center gap-4 text-sm text-[var(--theme-text)]">
-                <span>{track?.album || 'Unknown Album'}</span>
-                <span className="text-[var(--theme-border)]">•</span>
-                <span>{track.key}</span>
-                <span className="text-[var(--theme-border)]">•</span>
-                <span>{track.duration}</span>
+              <div className="flex items-center gap-4 text-sm text-[var(--theme-text)] flex-1">
+                <span className="min-w-[150px]">{track?.album || 'Unknown Album'}</span>
+                <span className="min-w-[100px]">{track.bpm ? `${track.bpm} BPM` : '-'}</span>
+                <span className="min-w-[60px]">{track.duration}</span>
               </div>
 
-              <Button
-                variant="secondary"
-                size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-all duration-300 bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface)]"
-                onClick={() => handleTrackAction(track)}
-              >
-                <MoreVertical className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-all duration-300 bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface)]"
+                  onClick={() => handleTrackAction(track)}
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
         ))}
@@ -456,10 +444,13 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
               onPlayPause();
             }
           }}
+          onAnalyzeBPM={contextMenu.track.bpm === 0 ? handleAnalyzeBPM : undefined}
+          isAnalyzing={isAnalyzing === contextMenu.track.id}
+          onGoToAlbum={onGoToAlbum}
         />
       )}
 
-      {/* Action Modal */}
+      {/* Action Modal */}  
       <Modal
         isOpen={isActionModalOpen}
         onClose={() => setIsActionModalOpen(false)}
@@ -476,7 +467,7 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
               <h3 className="text-lg font-medium mb-1">{selectedTrack?.title}</h3>
               <p className="text-sm text-[var(--theme-text)] mb-3">{selectedTrack?.artist}</p>
               <div className="flex items-center gap-3 text-sm text-[var(--theme-text)]">
-                <span>{selectedTrack?.format?.toUpperCase()}</span>
+                <span>{selectedTrack?.format}</span>
                 <span>•</span>
                 <span>{selectedTrack?.duration}</span>
               </div>
@@ -484,7 +475,7 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
           </div>
 
           {/* Technical Details */}
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-[var(--theme-surface)]">
+          <div className="grid grid-cols-2 p-2 gap-4 bg-[var(--theme-surface)]">
             <div>
               <div className="text-xs text-[var(--theme-text)] mb-1">BPM</div>
               <div className="font-medium">{selectedTrack?.bpm || 'Unknown'}</div>
@@ -505,21 +496,6 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
                 {selectedTrack?.path.split('/').slice(-2).join('/')}
               </div>
             </div>
-          </div>
-
-          {/* Actions */}
-          <div className="pt-2">
-            <Button
-              variant="primary"
-              leftIcon={<Trash2 size={18} />}
-              className="w-full justify-start hover:translate-y-[-2px] transition-transform"
-              onClick={() => {
-                setIsActionModalOpen(false);
-                setIsDeleteModalOpen(true);
-              }}
-            >
-              Delete Beat
-            </Button>
           </div>
         </div>
       </Modal>
