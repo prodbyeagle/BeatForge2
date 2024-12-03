@@ -1,7 +1,7 @@
 export interface Track {
   id: string;
-  title: string;
   name: string;  // Original filename
+  title: string;
   artist?: string;
   album?: string;
   path: string;
