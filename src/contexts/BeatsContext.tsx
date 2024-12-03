@@ -7,7 +7,7 @@ import { ulid } from 'ulid';
 const SUPPORTED_FORMATS = ['.mp3', '.wav', '.flac', '.aiff', '.m4a', '.ogg'];
 
 /**
- * Extended DirEntry interface with additional file metadata
+ * Represents a directory entry with additional file metadata
  */
 interface ExtendedDirEntry extends DirEntry {
   lastModified: number;
@@ -16,9 +16,9 @@ interface ExtendedDirEntry extends DirEntry {
 }
 
 /**
- * Represents a music beat with its metadata
+ * Represents a music beat with its metadata and file information
  */
-interface Beat {
+export interface Beat {
   id: string;
   name: string;
   title: string;
@@ -36,7 +36,7 @@ interface Beat {
 }
 
 /**
- * Context interface for managing beats
+ * Context interface for managing beats state and operations
  */
 interface BeatsContextType {
   beats: Beat[];
@@ -51,11 +51,15 @@ const BeatsContext = createContext<BeatsContextType | undefined>(undefined);
 const beatStore = new LazyStore('beat-index.json');
 const settingsStore = new LazyStore('settings.json');
 
+const normalizePath = (path: string): string => {
+  return path.replace(/\\/g, '/').toLowerCase();
+};
+
 /**
- * Extracts metadata from an audio file
- * @param filePath - Path to the audio file
- * @param format - Audio file format
- * @returns Partial Beat object containing extracted metadata
+ * Extracts and processes metadata from an audio file
+ * @param filePath - Absolute path to the audio file
+ * @param format - Audio file format extension
+ * @returns Promise containing the extracted metadata as a partial Beat object
  */
 const extractMetadata = async (filePath: string, format: string): Promise<Partial<Beat>> => {
   if (!filePath) {
@@ -103,11 +107,13 @@ const extractMetadata = async (filePath: string, format: string): Promise<Partia
     }
 
     const duration = metadata.format.duration || 0;
+    const title = metadata.common.title || "no title";
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60);
     const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
     return {
+      title,
       artist,
       album: metadata.common.album,
       duration: formattedDuration,
@@ -119,9 +125,12 @@ const extractMetadata = async (filePath: string, format: string): Promise<Partia
 };
 
 /**
- * Creates a lightweight index of beats with basic information
+ * Creates a beat index entry with basic file information and metadata
+ * @param entry - Directory entry containing file information
+ * @param existingBeat - Optional existing beat data to preserve
+ * @returns Promise containing the created Beat object or null if invalid
  */
-const createBeatIndex = async (entry: ExtendedDirEntry): Promise<Beat | null> => {
+const createBeatIndex = async (entry: ExtendedDirEntry, existingBeat?: Beat): Promise<Beat | null> => {
   if (!entry.name || entry.name.toLowerCase().endsWith('.flp')) {
     return null;
   }
@@ -139,26 +148,25 @@ const createBeatIndex = async (entry: ExtendedDirEntry): Promise<Beat | null> =>
     const metadata = await extractMetadata(entry.path, format);
 
     return {
-      id: ulid(),
+      id: existingBeat?.id || ulid(),
       name: entry.name,
-      title: entry.name.replace(/\.[^/.]+$/, ''), // Remove file extension
+      title: metadata.title || "no title",
       path: entry.path,
       format: format,
-      size: entry.size || 0,
+      size: metadata.size || 0,
       lastModified: entry.lastModified || Date.now(),
       isMetadataLoaded: true,
-      artist: metadata.artist || 'prodbyeagle',
+      artist: metadata.artist || 'Unknown Artist',
       album: metadata.album || 'Unknown Album',
       duration: metadata.duration || '0:00',
-      bpm: 0, // Initialize BPM as 0
-      key: undefined,
+      bpm: existingBeat?.bpm || 0,
+      key: existingBeat?.key,
       coverArt: metadata.coverArt
     };
   } catch (error) {
-    console.error(`❌ Failed to extract metadata for ${entry.name}:`, error);
-    // Still create the beat, but without metadata
+    console.error(`Failed to extract metadata for ${entry.name}:`, error);
     return {
-      id: ulid(),
+      id: existingBeat?.id || ulid(),
       name: entry.name,
       title: entry.name.replace(/\.[^/.]+$/, ''),
       path: entry.path,
@@ -166,39 +174,43 @@ const createBeatIndex = async (entry: ExtendedDirEntry): Promise<Beat | null> =>
       size: entry.size || 0,
       lastModified: entry.lastModified || Date.now(),
       isMetadataLoaded: false,
-      artist: 'prodbyeagle',
+      artist: 'Unknown Artist',
       album: 'Unknown Album',
       duration: '0:00',
-      bpm: 0, // Initialize BPM as 0
-      key: undefined,
+      bpm: existingBeat?.bpm || 0,
+      key: existingBeat?.key,
       coverArt: undefined
     };
   }
 };
 
 /**
- * Loads beats from specified folders
+ * Loads and processes beats from specified folders
+ * @param folders - Array of folder paths to scan for beats
+ * @returns Promise containing array of loaded Beat objects
  */
 const loadBeats = async (folders: string[]): Promise<Beat[]> => {
   let allBeats: Beat[] = [];
   const loadErrors: string[] = [];
 
-  // Try to load from index first
   let existingBeats: Beat[] = [];
   try {
     const indexedBeats = await beatStore.get<Beat[]>('beats');
+    console.log('Loaded beats from store:', indexedBeats);
     if (indexedBeats && indexedBeats.length > 0) {
-      // Only keep beats from current folders
+      const normalizedFolders = folders.map(f => normalizePath(f));
       existingBeats = indexedBeats.filter(beat =>
-        folders.some(folder => beat.path.startsWith(folder))
+        normalizedFolders.some(folder => normalizePath(beat.path).startsWith(folder))
       );
+      console.log('Filtered existing beats:', existingBeats);
     }
   } catch (error) {
-    console.warn('⚠️ Could not load beat index:', error);
+    console.warn('Could not load beat index:', error);
   }
 
-  // Create a map of existing beats by path for quick lookup
-  const existingBeatsMap = new Map(existingBeats.map(beat => [beat.path, beat]));
+  const existingBeatsMap = new Map(
+    existingBeats.map(beat => [normalizePath(beat.path), beat])
+  );
 
   for (const folder of folders) {
     try {
@@ -211,7 +223,7 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
           path: `${normalizedPath}/${entry.name}`
         }));
       } catch (accessError) {
-        console.error(`❌ Cannot access folder ${folder}:`, accessError);
+        console.error(`Cannot access folder ${folder}:`, accessError);
         loadErrors.push(`Cannot access folder ${folder}: ${accessError instanceof Error ? accessError.message : 'Unknown error'}`);
         continue;
       }
@@ -220,24 +232,22 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
         for (const entry of entries) {
           if (entry.isFile) {
             try {
-              // Check if we already have this beat
-              const existingBeat = existingBeatsMap.get(entry.path);
+              const existingBeat = existingBeatsMap.get(normalizePath(entry.path));
               if (existingBeat) {
-                // Use existing beat data but update file metadata
                 allBeats.push({
                   ...existingBeat,
                   size: entry.size || existingBeat.size,
-                  lastModified: entry.lastModified || existingBeat.lastModified
+                  lastModified: entry.lastModified || existingBeat.lastModified,
+                  bpm: existingBeat.bpm || 0
                 });
               } else {
-                // Create new beat only if it doesn't exist
-                const beat = await createBeatIndex(entry);
+                const beat = await createBeatIndex(entry, existingBeat);
                 if (beat) {
                   allBeats.push(beat);
                 }
               }
             } catch (error) {
-              console.error(`❌ Failed to index beat ${entry.name}:`, error);
+              console.error(`Failed to index beat ${entry.name}:`, error);
             }
           }
 
@@ -246,7 +256,7 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
               const subEntries = await readDir(entry.path) as ExtendedDirEntry[];
               await processEntries(subEntries);
             } catch (subDirError) {
-              console.error(`❌ Cannot access subdirectory ${entry.path}:`, subDirError);
+              console.error(`Cannot access subdirectory ${entry.path}:`, subDirError);
               loadErrors.push(`Cannot access subdirectory ${entry.path}: ${subDirError instanceof Error ? subDirError.message : 'Unknown error'}`);
             }
           }
@@ -255,21 +265,22 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
 
       await processEntries(entries);
     } catch (error) {
-      console.error(`❌ Error processing folder ${folder}:`, error);
+      console.error(`Error processing folder ${folder}:`, error);
       loadErrors.push(`Unexpected error reading folder ${folder}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  // Save to index
   try {
+    console.log('Saving beats to store:', allBeats);
     await beatStore.set('beats', allBeats);
     await beatStore.save();
+    console.log('Beats saved successfully');
   } catch (error) {
-    console.error('❌ Could not save beat index:', error);
+    console.error('Could not save beat index:', error);
   }
 
   if (loadErrors.length > 0) {
-    console.error(`❌ Encountered ${loadErrors.length} errors while loading beats:`, loadErrors);
+    console.error(`Encountered ${loadErrors.length} errors while loading beats:`, loadErrors);
     throw new Error(`Encountered ${loadErrors.length} errors while loading beats:\n${loadErrors.join('\n')}`);
   }
 
@@ -277,7 +288,7 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
 };
 
 /**
- * Provider component for beats management
+ * Provider component for managing beats state and operations
  */
 export function BeatsProvider({ children }: { children: ReactNode }) {
   const [beats, setBeats] = useState<Beat[]>([]);
@@ -312,7 +323,7 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
         ? err.message
         : 'An unknown error occurred while loading beats';
 
-      console.error('❌ Error during beats refresh:', errorMessage);
+      console.error('Error during beats refresh:', errorMessage);
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -321,19 +332,20 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
 
   const updateBeat = useCallback(async (updatedBeat: Beat) => {
     try {
-      // Update beats in state
       setBeats(prevBeats =>
         prevBeats.map(beat => beat.id === updatedBeat.id ? updatedBeat : beat)
       );
 
       const storedBeats = (await beatStore.get('beats')) as Beat[] || [];
+      console.log('Current stored beats:', storedBeats);
       
-      // Update the specific beat in stored beats
       const updatedStoredBeats = storedBeats.map(beat => 
         beat.id === updatedBeat.id ? updatedBeat : beat
       );
 
-      // Save updated beats back to store
+      console.log('Saving updated beat:', updatedBeat);
+      console.log('Updated stored beats:', updatedStoredBeats);
+      
       await beatStore.set('beats', updatedStoredBeats);
       await beatStore.save();
     } catch (err) {
@@ -354,7 +366,8 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Hook to access the beats context
+ * Hook to access the beats context and its operations
+ * @throws Error if used outside of BeatsProvider
  */
 export const useBeats = () => {
   const context = useContext(BeatsContext);
