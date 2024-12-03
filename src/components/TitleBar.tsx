@@ -21,48 +21,77 @@ const TitleBar: React.FC = () => {
   return (
     <div
       data-tauri-drag-region
-      className="fixed top-0 left-0 right-0 h-8 flex items-center justify-between bg-[var(--theme-primary)]/95 backdrop-blur-md z-50 px-3"
+      className="fixed top-0 left-0 right-0 h-9 
+                flex items-center justify-between 
+                bg-[var(--theme-primary)]/95 backdrop-blur-md
+                z-50 px-3"
     >
       {/* Window Controls (Left Side) */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <button
           onClick={handleClose}
-          className="group relative w-2.5 h-2.5 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/90 transition-colors"
+          className="group relative w-3 h-3 rounded-full 
+                  bg-[#FF5F57] hover:bg-[#FF5F57]/90 
+                  transition-all duration-200
+                  hover:ring-4 hover:ring-[#FF5F57]/20"
           title="Close"
         >
-          <X 
-            size={6} 
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-50 text-black transition-opacity" 
+          <X
+            size={8}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                    opacity-0 group-hover:opacity-50 text-black 
+                    transition-opacity duration-200"
           />
         </button>
         <button
           onClick={handleMinimize}
-          className="group relative w-2.5 h-2.5 rounded-full bg-[#FFBD2E] hover:bg-[#FFBD2E]/90 transition-colors"
+          className="group relative w-3 h-3 rounded-full 
+                  bg-[#FFBD2E] hover:bg-[#FFBD2E]/90 
+                  transition-all duration-200
+                  hover:ring-4 hover:ring-[#FFBD2E]/20"
           title="Minimize"
         >
-          <Minimize2 
-            size={6} 
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-50 text-black transition-opacity" 
+          <Minimize2
+            size={8}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                    opacity-0 group-hover:opacity-50 text-black 
+                    transition-opacity duration-200"
           />
         </button>
         <button
           onClick={handleMaximize}
-          className="group relative w-2.5 h-2.5 rounded-full bg-[#28C840] hover:bg-[#28C840]/90 transition-colors"
+          className="group relative w-3 h-3 rounded-full 
+                  bg-[#28C840] hover:bg-[#28C840]/90 
+                  transition-all duration-200
+                  hover:ring-4 hover:ring-[#28C840]/20"
           title="Maximize"
         >
-          <Maximize2 
-            size={6} 
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-50 text-black transition-opacity" 
+          <Maximize2
+            size={8}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                    opacity-0 group-hover:opacity-50 text-black 
+                    transition-opacity duration-200"
           />
         </button>
       </div>
 
       {/* App Title (Center) */}
-      <div 
-        className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 select-none"
+      <div
+        className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                select-none flex items-center gap-1.5"
         data-tauri-drag-region
       >
-        <span className="text-xs font-medium text-[var(--theme-tertiary)] opacity-80">BeatForge (WIP)</span>
+        <span className="text-xs font-medium tracking-wide 
+                      text-[var(--theme-tertiary)]/90 
+                      transition-opacity duration-200
+                      hover:opacity-100">
+          BeatForge
+        </span>
+        <span className="text-[10px] font-medium px-1 py-0.5 
+                      rounded bg-[var(--theme-tertiary)]/10 
+                      text-[var(--theme-tertiary)]/50">
+          BETA
+        </span>
       </div>
 
       {/* Right Side Space (for symmetry) */}

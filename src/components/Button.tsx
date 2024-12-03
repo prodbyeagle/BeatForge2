@@ -22,17 +22,27 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2';
-  
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300';
+
   const getVariantStyles = (variant: ButtonVariant) => {
-    const color = `var(--theme-${variant})`;
-    return `bg-[${color}] hover:bg-[${color}] text-white ring-none`;
+    switch (variant) {
+      case 'primary':
+        return 'bg-[var(--theme-primary)] hover:bg-[var(--theme-primary)]/90 text-[var(--theme-tertiary)] ';
+      case 'secondary':
+        return 'bg-[var(--theme-secondary)] hover:bg-[var(--theme-secondary)]/90 text-[var(--theme-tertiary)]';
+      case 'tertiary':
+        return 'bg-transparent hover:bg-[var(--theme-tertiary)]/5 text-[var(--theme-tertiary)] ';
+      case 'quaternary':
+        return 'bg-transparent text-[var(--theme-tertiary)]/70 hover:text-[var(--theme-tertiary)] hover:bg-[var(--theme-tertiary)]';
+      default:
+        return '';
+    }
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    sm: 'px-3 py-1.5 text-sm gap-1.5',
+    md: 'px-4 py-2 text-base gap-2',
+    lg: 'px-6 py-3 text-lg gap-2.5',
   };
 
   const isDisabled = disabled || isLoading;
@@ -43,15 +53,15 @@ const Button: React.FC<ButtonProps> = ({
         ${baseStyles}
         ${getVariantStyles(variant)}
         ${sizes[size]}
-        ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+        ${isDisabled ? 'opacity-50 cursor-not-allowed hover:transform-none hover:shadow-none' : ''}
         ${className}
       `}
       disabled={isDisabled}
       {...props}
     >
-      {isLoading && (
+      {isLoading ? (
         <svg
-          className="animate-spin -ml-1 mr-2 h-4 w-4"
+          className="animate-spin h-4 w-4"
           fill="none"
           viewBox="0 0 24 24"
         >
@@ -69,10 +79,13 @@ const Button: React.FC<ButtonProps> = ({
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
           />
         </svg>
+      ) : (
+        <>
+          {leftIcon}
+          {children}
+          {rightIcon}
+        </>
       )}
-      {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
-      {children}
-      {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
     </button>
   );
 };
