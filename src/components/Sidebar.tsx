@@ -116,7 +116,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--theme-border)] to-transparent" />
           <div className="text-xs space-y-1">
             <p className="font-medium text-[var(--theme-text)] hover:text-[var(--theme-text)] transition-colors">
-              BeatForge v1.0.0
+              BeatForge v0.3.5
             </p>
             <p className="font-medium text-[var(--theme-text)] hover:text-[var(--theme-text)] transition-colors">
               Made with ♥ by @prodbyeagle
