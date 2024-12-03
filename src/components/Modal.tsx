@@ -34,7 +34,7 @@ const Modal: React.FC<ModalProps> = ({
   return (
     <div
       className={`
-        fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6
+        fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-4
         transition-[opacity,visibility] duration-300
         ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
       `}
@@ -52,7 +52,7 @@ const Modal: React.FC<ModalProps> = ({
       {/* Modal */}
       <div
         className={`
-          relative z-50 w-full max-w-lg transform rounded-2xl
+          relative z-50 w-full max-w-2xl transform rounded-2xl
           bg-[var(--theme-surface)] backdrop-blur-2xl p-6
           shadow-2xl transition-all duration-300
           border border-[var(--theme-border)]

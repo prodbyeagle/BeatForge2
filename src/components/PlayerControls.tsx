@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import Button from './Button';
@@ -11,7 +11,6 @@ interface PlayerControlsProps {
   isPlaying: boolean;
   onPlayPause: () => void;
   onPrevious?: () => void;
-  onNext?: () => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -20,7 +19,6 @@ const formatTime = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Custom debounce hook
 const useDebounce = <T,>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -41,8 +39,6 @@ const PlayerControls = ({
   currentTrack,
   isPlaying,
   onPlayPause,
-  onPrevious,
-  onNext,
 }: PlayerControlsProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const { settings, updateSettings } = useSettings();
@@ -55,17 +51,18 @@ const PlayerControls = ({
   const [hasPlayedMusic, setHasPlayedMusic] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Debounce volume changes
+  //TODO: add queue system so its playing the next song after the current one finishes
+  //TODO: add shuffle feature
+  //TODO: add repeat feature
+
   const debouncedVolume = useDebounce(localVolume, 500);
 
-  // Update settings when debounced volume changes
   useEffect(() => {
     if (debouncedVolume !== settings.volume) {
       updateSettings({ volume: debouncedVolume });
     }
   }, [debouncedVolume]);
 
-  // Handle play/pause
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
@@ -84,18 +81,15 @@ const PlayerControls = ({
     }
   }, [isPlaying]);
 
-  // Handle track change
   useEffect(() => {
     if (audioRef.current && currentTrack) {
       setHasPlayedMusic(true);
       setIsLoading(true);
 
-      // Load metadata if not already loaded
       if (!currentTrack.isMetadataLoaded) {
         loadMetadata(currentTrack.id);
       }
 
-      // Use Tauri's convertFileSrc to get a proper URL for local files
       const fileUrl = convertFileSrc(currentTrack.path);
       audioRef.current.src = fileUrl;
 
@@ -131,9 +125,7 @@ const PlayerControls = ({
       };
 
       const handleEnded = () => {
-        if (onNext) {
-          onNext();
-        }
+        return;
       };
 
       audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
@@ -148,7 +140,7 @@ const PlayerControls = ({
         }
       };
     }
-  }, [settings.volume, onNext, localVolume]);
+  }, [settings.volume, localVolume]);
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
@@ -184,7 +176,6 @@ const PlayerControls = ({
       <audio ref={audioRef} />
       <div className="max-w-screen-2xl mx-auto">
         <div className="bg-[var(--theme-surface)]/90 backdrop-blur-xl border border-[var(--theme-border)] px-4 py-3 rounded-3xl shadow-lg">
-          {/* Timeline */}
           <div className="px-4 mb-3 flex items-center gap-3">
             <span className="text-xs text-[var(--theme-text)] select-none">
               {formatTime(currentTime)}
@@ -203,7 +194,6 @@ const PlayerControls = ({
           </div>
 
           <div className="flex items-center justify-between gap-4 md:gap-8">
-            {/* Track Info */}
             <div className="flex items-center gap-4 w-[240px] lg:w-[280px] min-w-0">
               {currentTrack ? (
                 <>
@@ -241,14 +231,6 @@ const PlayerControls = ({
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={onPrevious}
-                disabled={!currentTrack}
-              >
-                <SkipBack className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
                 className="w-10 h-10 rounded-full"
                 onClick={onPlayPause}
                 disabled={!currentTrack}
@@ -259,17 +241,8 @@ const PlayerControls = ({
                   <Play className="w-5 h-5 ml-0.5" />
                 )}
               </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onNext}
-                disabled={!currentTrack}
-              >
-                <SkipForward className="w-4 h-4" />
-              </Button>
             </div>
 
-            {/* Volume Control */}
             <div className="flex items-center gap-2 w-[240px] lg:w-[280px] min-w-0 justify-end">
               <Button
                 variant="secondary"

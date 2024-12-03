@@ -44,6 +44,7 @@ interface BeatsContextType {
   error: string | null;
   refreshBeats: () => Promise<void>;
   loadMetadata: (beatId: string) => Promise<void>;
+  updateBeat: (updatedBeat: Beat) => Promise<void>;
 }
 
 const BeatsContext = createContext<BeatsContextType | undefined>(undefined);
@@ -133,10 +134,10 @@ const createBeatIndex = async (entry: ExtendedDirEntry): Promise<Beat | null> =>
   if (!SUPPORTED_FORMATS.includes(format)) {
     return null;
   }
-  
+
   try {
     const metadata = await extractMetadata(entry.path, format);
-    
+
     return {
       id: ulid(),
       name: entry.name,
@@ -149,7 +150,7 @@ const createBeatIndex = async (entry: ExtendedDirEntry): Promise<Beat | null> =>
       artist: metadata.artist || 'prodbyeagle',
       album: metadata.album || 'Unknown Album',
       duration: metadata.duration || '0:00',
-      bpm: undefined,
+      bpm: 0, // Initialize BPM as 0
       key: undefined,
       coverArt: metadata.coverArt
     };
@@ -168,7 +169,7 @@ const createBeatIndex = async (entry: ExtendedDirEntry): Promise<Beat | null> =>
       artist: 'prodbyeagle',
       album: 'Unknown Album',
       duration: '0:00',
-      bpm: undefined,
+      bpm: 0, // Initialize BPM as 0
       key: undefined,
       coverArt: undefined
     };
@@ -188,7 +189,7 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
     const indexedBeats = await beatStore.get<Beat[]>('beats');
     if (indexedBeats && indexedBeats.length > 0) {
       // Only keep beats from current folders
-      existingBeats = indexedBeats.filter(beat => 
+      existingBeats = indexedBeats.filter(beat =>
         folders.some(folder => beat.path.startsWith(folder))
       );
     }
@@ -196,15 +197,14 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
     console.warn('⚠️ Could not load beat index:', error);
   }
 
-  const existingPaths = new Set(existingBeats.map(beat => beat.path));
+  // Create a map of existing beats by path for quick lookup
+  const existingBeatsMap = new Map(existingBeats.map(beat => [beat.path, beat]));
 
   for (const folder of folders) {
     try {
       let entries: ExtendedDirEntry[];
       try {
-        const normalizedPath = folder
-          .replace(/\\/g, '/');
-
+        const normalizedPath = folder.replace(/\\/g, '/');
         entries = await readDir(normalizedPath) as ExtendedDirEntry[];
         entries = entries.map(entry => ({
           ...entry,
@@ -212,8 +212,7 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
         }));
       } catch (accessError) {
         console.error(`❌ Cannot access folder ${folder}:`, accessError);
-        loadErrors.push(`Cannot access folder ${folder}: ${accessError instanceof Error ? accessError.message : 'Unknown error'
-          }`);
+        loadErrors.push(`Cannot access folder ${folder}: ${accessError instanceof Error ? accessError.message : 'Unknown error'}`);
         continue;
       }
 
@@ -221,10 +220,21 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
         for (const entry of entries) {
           if (entry.isFile) {
             try {
-              const beat = await createBeatIndex(entry);
-              if (beat && !existingPaths.has(beat.path)) {
-                allBeats.push(beat);
+              // Check if we already have this beat
+              const existingBeat = existingBeatsMap.get(entry.path);
+              if (existingBeat) {
+                // Use existing beat data but update file metadata
+                allBeats.push({
+                  ...existingBeat,
+                  size: entry.size || existingBeat.size,
+                  lastModified: entry.lastModified || existingBeat.lastModified
+                });
               } else {
+                // Create new beat only if it doesn't exist
+                const beat = await createBeatIndex(entry);
+                if (beat) {
+                  allBeats.push(beat);
+                }
               }
             } catch (error) {
               console.error(`❌ Failed to index beat ${entry.name}:`, error);
@@ -237,8 +247,7 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
               await processEntries(subEntries);
             } catch (subDirError) {
               console.error(`❌ Cannot access subdirectory ${entry.path}:`, subDirError);
-              loadErrors.push(`Cannot access subdirectory ${entry.path}: ${subDirError instanceof Error ? subDirError.message : 'Unknown error'
-                }`);
+              loadErrors.push(`Cannot access subdirectory ${entry.path}: ${subDirError instanceof Error ? subDirError.message : 'Unknown error'}`);
             }
           }
         }
@@ -247,13 +256,9 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
       await processEntries(entries);
     } catch (error) {
       console.error(`❌ Error processing folder ${folder}:`, error);
-      loadErrors.push(`Unexpected error reading folder ${folder}: ${error instanceof Error ? error.message : 'Unknown error'
-        }`);
+      loadErrors.push(`Unexpected error reading folder ${folder}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
-
-  // Merge existing beats with new ones
-  allBeats = [...existingBeats, ...allBeats];
 
   // Save to index
   try {
@@ -314,12 +319,35 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateBeat = useCallback(async (updatedBeat: Beat) => {
+    try {
+      // Update beats in state
+      setBeats(prevBeats =>
+        prevBeats.map(beat => beat.id === updatedBeat.id ? updatedBeat : beat)
+      );
+
+      const storedBeats = (await beatStore.get('beats')) as Beat[] || [];
+      
+      // Update the specific beat in stored beats
+      const updatedStoredBeats = storedBeats.map(beat => 
+        beat.id === updatedBeat.id ? updatedBeat : beat
+      );
+
+      // Save updated beats back to store
+      await beatStore.set('beats', updatedStoredBeats);
+      await beatStore.save();
+    } catch (err) {
+      console.error('Error updating beat:', err);
+      throw err;
+    }
+  }, []);
+
   useEffect(() => {
     refreshBeats();
   }, [refreshBeats]);
 
   return (
-    <BeatsContext.Provider value={{ beats, isLoading, error, refreshBeats, loadMetadata }}>
+    <BeatsContext.Provider value={{ beats, isLoading, error, refreshBeats, loadMetadata, updateBeat }}>
       {children}
     </BeatsContext.Provider>
   );

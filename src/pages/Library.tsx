@@ -1,11 +1,13 @@
 import { Play, Pause, Trash2, Search, LayoutGrid, List, MoreVertical, ArrowUpDown, ChevronDown } from 'lucide-react';
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import ContextMenu from '../components/ContextMenu';
 import { Track } from '../types/Track';
 import { useBeats } from '../contexts/BeatsContext';
 import { useSettings } from '../contexts/SettingsContext';
+import * as realtimeBpm from 'realtime-bpm-analyzer';
+import { readFile } from '@tauri-apps/plugin-fs';
 
 interface LibraryProps {
   currentTrack: Track | null;
@@ -15,7 +17,7 @@ interface LibraryProps {
 }
 
 const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: LibraryProps) => {
-  const { beats, isLoading, error, refreshBeats } = useBeats();
+  const { beats, isLoading, error, refreshBeats, updateBeat } = useBeats();
   const { settings, updateSettings } = useSettings();
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
@@ -25,10 +27,10 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; track: Track } | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null); // Track which file is being analyzed
   const gridRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Memoized tracks conversion for better performance
   const tracks: Track[] = useMemo(() => beats.map(beat => ({
     id: beat.id,
     name: beat.name,
@@ -46,16 +48,13 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
     isMetadataLoaded: beat.isMetadataLoaded
   })), [beats]);
 
-  // Memoized filtered and sorted tracks
   const filteredTracks = useMemo(() => {
-    // First filter
     const filtered = tracks.filter(track =>
       track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (track.artist || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (track.album || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Then sort
     return filtered.sort((a, b) => {
       let comparison = 0;
       switch (sortOption) {
@@ -72,6 +71,46 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [tracks, searchQuery, sortOption, sortDirection]);
+
+  const analyzeBPM = async (track: Track) => {
+    if (track.bpm !== 0 || isAnalyzing) return; // Skip if BPM exists or if already analyzing
+
+    try {
+      setIsAnalyzing(track.id);
+      
+      // Create audio context
+      const audioContext = new AudioContext();
+      
+      // Read the audio file using Tauri's fs API
+      const fileData = await readFile(track.path);
+      const arrayBuffer = fileData.buffer;
+      
+      // Decode the audio data
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // Analyze the BPM
+      const result = await realtimeBpm.analyzeFullBuffer(audioBuffer);
+      
+      if (result && result.length > 0) {
+        const detectedBPM = Math.round(result[0].tempo);
+        
+        // Update the track with the detected BPM
+        await updateBeat({
+          ...track,
+          bpm: detectedBPM
+        });
+      }
+    } catch (error) {
+      console.error('Error analyzing BPM:', error);
+    } finally {
+      setIsAnalyzing(null);
+    }
+  };
+
+  const handleAnalyzeBPM = async (track: Track, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await analyzeBPM(track);
+  };
 
   const handlePlayPause = (track: Track) => {
     if (!isPlaying) {
@@ -154,17 +193,12 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
   const GridView = () => (
     <div
       ref={gridRef}
-      className="overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 p-6"
+      className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 p-6"
     >
       {filteredTracks.map((track) => (
         <div
           key={track.id}
-          className="group relative h-52 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1"
-          style={{
-            backgroundImage: `url(${track.coverArt})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
+          className="group relative h-64 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-hover)] border border-[var(--theme-border)] hover:shadow-lg"
           onDoubleClick={() => {
             onTrackSelect(track);
             if (!isPlaying) {
@@ -173,50 +207,83 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
           }}
           onContextMenu={(e) => handleContextMenu(e, track)}
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent backdrop-blur-md" />
-
-          <div className="absolute inset-0 p-4 flex flex-col justify-between">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base font-medium mb-1 truncate">{track.title}</h3>
-                <p className="text-sm text-[var(--theme-text)] truncate">{track.artist}</p>
+          <div 
+            className="h-40 w-full bg-cover bg-center relative group-hover:opacity-90 transition-opacity duration-300"
+            style={{
+              backgroundImage: `url(${track.coverArt || '/default-cover.png'})`
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60" />
+            
+            {currentTrack?.id === track.id && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <div className="w-12 h-12 rounded-full bg-[var(--theme-primary)] flex items-center justify-center">
+                  {isPlaying ? (
+                    <Pause className="w-6 h-6 text-white" />
+                  ) : (
+                    <Play className="w-6 h-6" />
+                  )}
+                </div>
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="ml-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface)]"
-                onClick={() => handleTrackAction(track)}
-              >
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </div>
+            )}
 
-            <div>
-              <div className="flex items-center gap-2 text-sm text-[var(--theme-text)] mb-3">
-                <span>{track?.album || 'Unknown Album'}</span>
-                <span className="text-[var(--theme-border)]">•</span>
-                <span>{track.key}</span>
-                <span className="text-[var(--theme-border)]">•</span>
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <div className="flex items-center gap-2 text-xs text-white/80">
                 <span>{track.duration}</span>
-              </div>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                className="w-full opacity-0 group-hover:opacity-100 transition-all duration-300 bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface)]"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePlayPause(track);
-                }}
-              >
-                {currentTrack?.id === track.id && isPlaying ? (
-                  <Pause className="w-5 h-5" />
-                ) : (
-                  <Play className="w-5 h-5" />
+                {track.bpm !== 0 && (
+                  <>
+                    <span className="opacity-60">•</span>
+                    <span>{track.bpm} BPM</span>
+                  </>
                 )}
-                {currentTrack?.id === track.id && isPlaying ? 'Pause' : 'Play'}
-              </Button>
+                {track.key !== 'Unknown' && (
+                  <>
+                    <span className="opacity-60">•</span>
+                    <span>{track.key}</span>
+                  </>
+                )}
+              </div>
             </div>
+          </div>
+
+          <div className="p-4 space-y-2">
+            <div>
+              <h3 className="text-base font-medium mb-1 truncate group-hover:text-[var(--theme-primary)]">
+                {track.title}
+              </h3>
+              <p className="text-sm opacity-70 truncate">
+                {track.artist || 'Unknown Artist'}
+              </p>
+            </div>
+            
+            <p className="text-xs opacity-50 truncate">
+              {track.album || 'Unknown Album'}
+            </p>
+          </div>
+
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
+            <Button
+              variant="secondary"
+              className="!p-2"
+              onClick={(e) => handleAnalyzeBPM(track, e)}
+              disabled={isAnalyzing !== null}
+            >
+              {isAnalyzing === track.id ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span className="text-xs">BPM</span>
+              )}
+            </Button>
+            <Button
+              variant="secondary"
+              className="!p-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleContextMenu(e, track);
+              }}
+            >
+              <MoreVertical className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       ))}
@@ -317,28 +384,6 @@ const Library = ({ currentTrack, isPlaying, onTrackSelect, onPlayPause }: Librar
       ))}
     </div>
   );
-
-  // Save scroll position when scrolling
-  useEffect(() => {
-    const currentRef = settings.viewMode === 'grid' ? gridRef.current : listRef.current;
-
-    const handleScroll = () => {
-      if (currentRef) {
-        updateSettings({ scrollPosition: currentRef.scrollTop });
-      }
-    };
-
-    currentRef?.addEventListener('scroll', handleScroll);
-    return () => currentRef?.removeEventListener('scroll', handleScroll);
-  }, [settings.viewMode]);
-
-  // Restore scroll position after track selection or view mode change
-  useEffect(() => {
-    const currentRef = settings.viewMode === 'grid' ? gridRef.current : listRef.current;
-    if (currentRef) {
-      currentRef.scrollTop = settings.scrollPosition;
-    }
-  }, [currentTrack, settings.viewMode, settings.scrollPosition]);
 
   return (
     <div className="h-full flex flex-col">
