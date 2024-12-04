@@ -37,6 +37,12 @@ const PlayerControls = ({
   const [currentTime, setCurrentTime] = useState(0);
   const timeDisplayRef = useRef<number>(0);
   const animationFrameRef = useRef<number>();
+  const [localVolume, setLocalVolume] = useState(volume);
+  const volumeTimeoutRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    setLocalVolume(volume);
+  }, [volume]);
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -79,8 +85,29 @@ const PlayerControls = ({
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
-    onVolumeChange(newVolume);
+    setLocalVolume(newVolume);
+    
+    // Update audio volume immediately for smooth feedback
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
+
+    // Debounce the callback to parent to prevent excessive updates
+    if (volumeTimeoutRef.current) {
+      clearTimeout(volumeTimeoutRef.current);
+    }
+    volumeTimeoutRef.current = setTimeout(() => {
+      onVolumeChange(newVolume);
+    }, 100);
   };
+
+  useEffect(() => {
+    return () => {
+      if (volumeTimeoutRef.current) {
+        clearTimeout(volumeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 p-4 px-52">
@@ -165,7 +192,7 @@ const PlayerControls = ({
                   min="0"
                   max="1"
                   step="0.01"
-                  value={volume}
+                  value={localVolume}
                   onChange={handleVolumeChange}
                   className="w-full h-1 appearance-none bg-[var(--theme-border)] rounded-full outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--theme-border)] [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-transform"
                 />
