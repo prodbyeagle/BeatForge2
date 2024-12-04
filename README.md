@@ -1,13 +1,17 @@
 # BeatForge
 
-A modern desktop application for music production and beat making, built with Tauri, React, and TypeScript.
+A modern desktop application for organizing and managing your beat library. BeatForge helps music producers keep their beats organized, tagged, and easily accessible.
 
 ## Features
 
+- Organize and manage your beat collection
+- Tag and categorize your beats
+- Quick search and filter functionality
+- Preview beats directly in the app
 - Modern and intuitive user interface
 - Cross-platform desktop application
-- Built with performance in mind using Rust and Tauri
-- Responsive design with Tailwind CSS
+- Fast performance with Rust backend
+- Clean, responsive design with Tailwind CSS
 
 ## Tech Stack
 
