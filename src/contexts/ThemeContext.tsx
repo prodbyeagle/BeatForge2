@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { Theme, defaultTheme, themes, withOpacity, gradient, ThemeColorSet } from '../themes';
 
@@ -24,6 +24,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 /** Provider component for theme management */
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState<Theme>(defaultTheme);
+  const [isLoading, setIsLoading] = useState(true);
+  const isInitialMount = useRef(true);
 
   /** Load theme from store on mount */
   useEffect(() => {
@@ -37,7 +39,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         }
       } catch (error) {
-        console.error('Error loading theme from store:', error);
+        console.error('Error loading theme:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadTheme();
@@ -45,25 +49,34 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   /** Persist theme preference to store */
   useEffect(() => {
+    // Skip saving during initial load
+    if (isLoading) return;
+
+    // Skip the first save after initial mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     const saveTheme = async () => {
       try {
         await store.set('theme', currentTheme);
         await store.save();
       } catch (error) {
-        console.error('Error saving theme to store:', error);
+        console.error('Error saving theme:', error);
       }
     };
     saveTheme();
-  }, [currentTheme]);
+  }, [currentTheme, isLoading]);
 
   /** Apply theme colors to CSS custom properties */
   useEffect(() => {
     const root = document.documentElement;
-    
+
     // Apply basic values
     currentTheme.values.forEach(value => {
       root.style.setProperty(`--theme-${value.name}`, value.color);
-      
+
       // Apply opacity variants if specified
       if (value.opacity) {
         root.style.setProperty(
@@ -71,7 +84,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           withOpacity(value.color, value.opacity)
         );
       }
-      
+
       // Apply gradients if specified
       if (value.gradient) {
         root.style.setProperty(
@@ -110,12 +123,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const getColorWithOpacity = (color: string, opacity: number) => withOpacity(color, opacity);
   const getGradient = (from: string, to: string, direction?: string) => gradient(from, to, direction);
-  const getColorState = (colorSet: ThemeColorSet, state: 'base' | 'hover' | 'active' | 'disabled' = 'base') => 
+  const getColorState = (colorSet: ThemeColorSet, state: 'base' | 'hover' | 'active' | 'disabled' = 'base') =>
     colorSet[state] || colorSet.base;
 
   return (
-    <ThemeContext.Provider value={{ 
-      currentTheme, 
+    <ThemeContext.Provider value={{
+      currentTheme,
       setTheme: setCurrentTheme,
       getColorWithOpacity,
       getGradient,
