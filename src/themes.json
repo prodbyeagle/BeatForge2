@@ -90,7 +90,7 @@
     {
       "name": "AMOLED",
       "description": "Pure black theme optimized for AMOLED displays",
-      "author": "@prodbyeagle",
+      "author": "prodbyeagle",
       "values": [
         {
           "name": "primary",
@@ -525,7 +525,7 @@
     {
       "name": "Classic Theme Renewed",
       "description": "Enhanced version of the original beatforge theme",
-      "author": "@prodbyeagle",
+      "author": "prodbyeagle",
       "values": [
         {
           "name": "primary",
@@ -673,8 +673,8 @@
           "hover": "#5BC0BE",
           "disabled": "#3A506B"
         },
-        "border": "#1C2541",
-        "divider": "#1C2541",
+        "border": "#3A506B",
+        "divider": "#3A506B",
         "shadow": "rgba(0, 0, 0, 0.2)",
         "overlay": "rgba(0, 0, 0, 0.5)",
         "success": "#40C057",
