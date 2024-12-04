@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { readDir, type DirEntry, readFile } from '@tauri-apps/plugin-fs';
 import * as musicMetadata from 'music-metadata';
@@ -196,13 +196,11 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
   let existingBeats: Beat[] = [];
   try {
     const indexedBeats = await beatStore.get<Beat[]>('beats');
-    console.log('Loaded beats from store:', indexedBeats);
     if (indexedBeats && indexedBeats.length > 0) {
       const normalizedFolders = folders.map(f => normalizePath(f));
       existingBeats = indexedBeats.filter(beat =>
         normalizedFolders.some(folder => normalizePath(beat.path).startsWith(folder))
       );
-      console.log('Filtered existing beats:', existingBeats);
     }
   } catch (error) {
     console.warn('Could not load beat index:', error);
@@ -270,13 +268,14 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
     }
   }
 
-  try {
-    console.log('Saving beats to store:', allBeats);
-    await beatStore.set('beats', allBeats);
-    await beatStore.save();
-    console.log('Beats saved successfully');
-  } catch (error) {
-    console.error('Could not save beat index:', error);
+  const currentBeats = await beatStore.get<Beat[]>('beats') || [];
+  if (JSON.stringify(currentBeats) !== JSON.stringify(allBeats)) {
+    try {
+      await beatStore.set('beats', allBeats);
+      await beatStore.save();
+    } catch (error) {
+      console.error('Could not save beat index:', error);
+    }
   }
 
   if (loadErrors.length > 0) {
@@ -291,27 +290,41 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
  * Provider component for managing beats state and operations
  */
 export function BeatsProvider({ children }: { children: ReactNode }) {
+  console.log('[BeatsProvider] Rendering', new Date().toISOString(), performance.now());
+  
   const [beats, setBeats] = useState<Beat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const renderCount = useRef(0);
+
+  // Track render count
+  useEffect(() => {
+    renderCount.current++;
+    console.log(`[BeatsProvider] Render count: ${renderCount.current}`);
+  });
 
   const loadMetadata = useCallback(async (beatId: string) => {
+    console.log('[BeatsProvider] loadMetadata called for beat:', beatId);
+    
     const beat = beats.find(b => b.id === beatId);
     if (!beat || beat.isMetadataLoaded) return;
 
     try {
       const metadata = await extractMetadata(beat.path, beat.format);
-      setBeats(prevBeats => prevBeats.map(b =>
-        b.id === beatId
-          ? { ...b, ...metadata, isMetadataLoaded: true }
-          : b
-      ));
+      setBeats(currentBeats => 
+        currentBeats.map(b =>
+          b.id === beatId
+            ? { ...b, ...metadata, isMetadataLoaded: true }
+            : b
+        )
+      );
     } catch (error) {
       console.error(`Error loading metadata for beat ${beat.name}:`, error);
     }
   }, [beats]);
 
   const refreshBeats = useCallback(async () => {
+    console.log('[BeatsProvider] refreshBeats called');
     setIsLoading(true);
     setError(null);
     try {
@@ -322,8 +335,6 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
       const errorMessage = err instanceof Error
         ? err.message
         : 'An unknown error occurred while loading beats';
-
-      console.error('Error during beats refresh:', errorMessage);
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -331,35 +342,47 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateBeat = useCallback(async (updatedBeat: Beat) => {
-    try {
-      setBeats(prevBeats =>
-        prevBeats.map(beat => beat.id === updatedBeat.id ? updatedBeat : beat)
-      );
+    console.log('[BeatsProvider] updateBeat called for beat:', updatedBeat.id);
+    
+    setBeats(prevBeats => {
+      const currentBeat = prevBeats.find(beat => beat.id === updatedBeat.id);
+      if (JSON.stringify(currentBeat) === JSON.stringify(updatedBeat)) {
+        return prevBeats;
+      }
 
-      const storedBeats = (await beatStore.get('beats')) as Beat[] || [];
-      console.log('Current stored beats:', storedBeats);
-      
-      const updatedStoredBeats = storedBeats.map(beat => 
+      const newBeats = prevBeats.map(beat => 
         beat.id === updatedBeat.id ? updatedBeat : beat
       );
 
-      console.log('Saving updated beat:', updatedBeat);
-      console.log('Updated stored beats:', updatedStoredBeats);
-      
-      await beatStore.set('beats', updatedStoredBeats);
-      await beatStore.save();
-    } catch (err) {
-      console.error('Error updating beat:', err);
-      throw err;
-    }
+      // Move store update outside of state update
+      beatStore.set('beats', newBeats).then(() => beatStore.save())
+        .catch(err => console.error('[BeatsProvider] Error updating beat store:', err));
+
+      return newBeats;
+    });
   }, []);
+
+  // Memoize callback functions
+  const memoizedCallbacks = useMemo(() => ({
+    refreshBeats,
+    loadMetadata,
+    updateBeat
+  }), [refreshBeats, loadMetadata, updateBeat]);
 
   useEffect(() => {
     refreshBeats();
   }, [refreshBeats]);
 
+  // Memoize context value with all dependencies
+  const contextValue = useMemo(() => ({
+    beats,
+    isLoading,
+    error,
+    ...memoizedCallbacks
+  }), [beats, isLoading, error, memoizedCallbacks]);
+
   return (
-    <BeatsContext.Provider value={{ beats, isLoading, error, refreshBeats, loadMetadata, updateBeat }}>
+    <BeatsContext.Provider value={contextValue}>
       {children}
     </BeatsContext.Provider>
   );

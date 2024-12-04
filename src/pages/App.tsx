@@ -24,7 +24,6 @@ export default function App() {
   const [volume, setVolume] = useState(settings.volume);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(settings.volume);
-  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -39,24 +38,16 @@ export default function App() {
 
   useEffect(() => {
     if (audioRef.current) {
-      const handleTimeUpdate = () => {
-        if (audioRef.current) {
-          setCurrentTime(audioRef.current.currentTime);
-        }
-      };
-
       const handleDurationChange = () => {
         if (audioRef.current) {
           setDuration(audioRef.current.duration);
         }
       };
 
-      audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
       audioRef.current.addEventListener('durationchange', handleDurationChange);
 
       return () => {
         if (audioRef.current) {
-          audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
           audioRef.current.removeEventListener('durationchange', handleDurationChange);
         }
       };
@@ -173,7 +164,6 @@ export default function App() {
                   }
                 }}
               />
-
               <div className="flex-1 flex flex-col">
                 <main className="flex-1 overflow-y-auto pb-28">
                   {selectedAlbum ? (
@@ -197,7 +187,6 @@ export default function App() {
                     <Settings />
                   )}
                 </main>
-
                 <PlayerControls
                   currentTrack={currentTrack}
                   isPlaying={isPlaying}
@@ -207,7 +196,7 @@ export default function App() {
                   onToggleMute={handleToggleMute}
                   volume={volume}
                   isMuted={isMuted}
-                  currentTime={currentTime}
+                  audioRef={audioRef}
                   duration={duration}
                 />
               </div>

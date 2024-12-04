@@ -1,5 +1,5 @@
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Button from './Button';
 import { Track } from '../types/Track';
 
@@ -12,7 +12,7 @@ interface PlayerControlsProps {
   onToggleMute: () => void;
   volume: number;
   isMuted: boolean;
-  currentTime: number;
+  audioRef: React.RefObject<HTMLAudioElement>;
   duration: number;
 }
 
@@ -31,40 +31,50 @@ const PlayerControls = ({
   onToggleMute,
   volume,
   isMuted,
-  currentTime,
+  audioRef,
   duration
 }: PlayerControlsProps) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const timeDisplayRef = useRef<number>(0);
+  const animationFrameRef = useRef<number>();
 
   useEffect(() => {
-    if (audioRef.current) {
-      const handleTimeUpdate = () => {
-        if (audioRef.current) {
-          onTimelineChange(audioRef.current.currentTime);
-        }
-      };
+    if (!audioRef.current) return;
 
-      const handleDurationChange = () => {
-        if (audioRef.current) {
-          onTimelineChange(audioRef.current.duration);
-        }
-      };
+    let lastUpdateTime = 0;
+    const UPDATE_INTERVAL = 1000; // Update time display every second
 
-      audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
-      audioRef.current.addEventListener('durationchange', handleDurationChange);
+    const updateTimeDisplay = () => {
+      if (!audioRef.current) return;
 
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
-          audioRef.current.removeEventListener('durationchange', handleDurationChange);
-        }
-      };
+      const now = performance.now();
+      timeDisplayRef.current = audioRef.current.currentTime;
+
+      if (now - lastUpdateTime >= UPDATE_INTERVAL) {
+        setCurrentTime(timeDisplayRef.current);
+        lastUpdateTime = now;
+      }
+
+      if (isPlaying) {
+        animationFrameRef.current = requestAnimationFrame(updateTimeDisplay);
+      }
+    };
+
+    if (isPlaying) {
+      animationFrameRef.current = requestAnimationFrame(updateTimeDisplay);
     }
-  }, [onTimelineChange]);
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isPlaying, audioRef]);
 
   const handleTimelineChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = parseFloat(e.target.value);
     onTimelineChange(time);
+    setCurrentTime(time);
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +84,6 @@ const PlayerControls = ({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 p-4 px-52">
-      <audio ref={audioRef} />
       <div className="max-w-screen-2xl mx-auto">
         <div className="bg-[var(--theme-surface)]/90 backdrop-blur-xl border border-[var(--theme-border)] px-4 py-3 rounded-3xl shadow-lg">
           <div className="px-4 mb-3 flex items-center gap-3">
@@ -121,7 +130,6 @@ const PlayerControls = ({
               )}
             </div>
 
-            {/* Playback Controls */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant="secondary"
