@@ -1,8 +1,8 @@
 [package]
-name = "beatforge"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+name = "BeatForge"
+version = "0.3.5"
+description = "The Library for Producers"
+authors = ["prodbyeagle"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -11,7 +11,7 @@ edition = "2021"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "beatforge_lib"
+name = "beatforgelib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -20,7 +20,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "2.1.1", features = ["protocol-asset"] }
+tauri = { version = "2.1.1", features = ["protocol-asset", "devtools"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2.0.0-beta.0"
 notify = "7.0.0"

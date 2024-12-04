@@ -29,10 +29,7 @@
       "identifier": "fs:scope",
       "allow": [
         {
-          "path": "D:\\BEATS DATA\\**"
-        },
-        {
-          "path": "D:\\BEATS DATA\\@prodbyeagle Die Library\\**"
+          "path": "**"
         },
         {
           "path": "$APPDATA/**"
