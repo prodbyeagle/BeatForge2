@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { readDir, type DirEntry, readFile } from '@tauri-apps/plugin-fs';
 import * as musicMetadata from 'music-metadata';
@@ -107,7 +107,8 @@ const extractMetadata = async (filePath: string, format: string): Promise<Partia
     }
 
     const duration = metadata.format.duration || 0;
-    const title = metadata.common.title || "no title";
+    const fileName = filePath.split('/').pop() || '';
+    const title = metadata.common.title || fileName.replace(/\.[^/.]+$/, '');
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60);
     const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -150,7 +151,7 @@ const createBeatIndex = async (entry: ExtendedDirEntry, existingBeat?: Beat): Pr
     return {
       id: existingBeat?.id || ulid(),
       name: entry.name,
-      title: metadata.title || "no title",
+      title: metadata.title || entry.name.replace(/\.[^/.]+$/, ''),
       path: entry.path,
       format: format,
       size: metadata.size || 0,
@@ -290,22 +291,11 @@ const loadBeats = async (folders: string[]): Promise<Beat[]> => {
  * Provider component for managing beats state and operations
  */
 export function BeatsProvider({ children }: { children: ReactNode }) {
-  console.log('[BeatsProvider] Rendering', new Date().toISOString(), performance.now());
-  
   const [beats, setBeats] = useState<Beat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const renderCount = useRef(0);
-
-  // Track render count
-  useEffect(() => {
-    renderCount.current++;
-    console.log(`[BeatsProvider] Render count: ${renderCount.current}`);
-  });
 
   const loadMetadata = useCallback(async (beatId: string) => {
-    console.log('[BeatsProvider] loadMetadata called for beat:', beatId);
-    
     const beat = beats.find(b => b.id === beatId);
     if (!beat || beat.isMetadataLoaded) return;
 
@@ -324,7 +314,6 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
   }, [beats]);
 
   const refreshBeats = useCallback(async () => {
-    console.log('[BeatsProvider] refreshBeats called');
     setIsLoading(true);
     setError(null);
     try {
@@ -342,8 +331,6 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateBeat = useCallback(async (updatedBeat: Beat) => {
-    console.log('[BeatsProvider] updateBeat called for beat:', updatedBeat.id);
-    
     setBeats(prevBeats => {
       const currentBeat = prevBeats.find(beat => beat.id === updatedBeat.id);
       if (JSON.stringify(currentBeat) === JSON.stringify(updatedBeat)) {
@@ -354,7 +341,6 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
         beat.id === updatedBeat.id ? updatedBeat : beat
       );
 
-      // Move store update outside of state update
       beatStore.set('beats', newBeats).then(() => beatStore.save())
         .catch(err => console.error('[BeatsProvider] Error updating beat store:', err));
 
@@ -362,24 +348,18 @@ export function BeatsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Memoize callback functions
-  const memoizedCallbacks = useMemo(() => ({
-    refreshBeats,
-    loadMetadata,
-    updateBeat
-  }), [refreshBeats, loadMetadata, updateBeat]);
-
   useEffect(() => {
     refreshBeats();
   }, [refreshBeats]);
 
-  // Memoize context value with all dependencies
   const contextValue = useMemo(() => ({
     beats,
     isLoading,
     error,
-    ...memoizedCallbacks
-  }), [beats, isLoading, error, memoizedCallbacks]);
+    refreshBeats,
+    loadMetadata,
+    updateBeat
+  }), [beats, isLoading, error, refreshBeats, loadMetadata, updateBeat]);
 
   return (
     <BeatsContext.Provider value={contextValue}>
