@@ -1,28 +1,50 @@
 import React, { useEffect, useRef } from 'react';
 import { Track } from '../types/Track';
 
+/**
+ * Props for the ContextMenu component
+ * @interface ContextMenuProps
+ */
 interface ContextMenuProps {
+  /** X coordinate for menu positioning */
   x: number;
+  /** Y coordinate for menu positioning */
   y: number;
+  /** Track object containing song information */
   track: Track;
+  /** Callback function to close the context menu */
   onClose: () => void;
+  /** Optional callback function to handle track editing */
   onEdit?: (track: Track) => void;
+  /** Optional callback function to handle track playback */
   onPlay?: (track: Track) => void;
+  /** Optional callback function to analyze track BPM */
   onAnalyzeBPM?: (track: Track, e: React.MouseEvent) => void;
+  /** Flag indicating if BPM analysis is in progress */
   isAnalyzing?: boolean;
+  /** Optional callback function to navigate to album view */
   onGoToAlbum?: (album: string) => void;
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ 
-  x, 
-  y, 
-  track, 
-  onClose, 
-  onEdit, 
+/**
+ * ContextMenu Component
+ * 
+ * Displays a context menu with various actions for a track including
+ * play, edit, BPM analysis, and navigation options.
+ * 
+ * @param props - Component props of type ContextMenuProps
+ * @returns React component
+ */
+const ContextMenu: React.FC<ContextMenuProps> = ({
+  x,
+  y,
+  track,
+  onClose,
+  onEdit,
   onPlay,
   onAnalyzeBPM,
   isAnalyzing,
-  onGoToAlbum 
+  onGoToAlbum,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -72,6 +94,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             </button>
           </li>
         )}
+
         <li>
           <button
             onClick={() => {
@@ -83,6 +106,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             Play Song
           </button>
         </li>
+
         <li>
           <button
             onClick={() => {
@@ -94,6 +118,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             Edit Song
           </button>
         </li>
+
         {onGoToAlbum && (
           <li>
             <button
@@ -107,6 +132,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             </button>
           </li>
         )}
+
         <li>
           <button
             disabled
@@ -115,6 +141,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             Add to Queue
           </button>
         </li>
+
         <li>
           <button
             disabled
