@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Library, Settings, Music2Icon } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface SidebarProps {
   activePage: 'library' | 'albums' | 'settings';
@@ -7,7 +7,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { settings, updateSettings } = useSettings();
 
   const menuItems = [
     { icon: <Library size={24} />, label: 'Library', id: 'library' as const },
@@ -19,19 +19,23 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
     onNavigate(pageId);
   };
 
+  const toggleCollapsed = async () => {
+    await updateSettings({ isCollapsed: !settings.isCollapsed });
+  };
+
   return (
     <div
       className={`
         h-screen bg-[var(--theme-background)] backdrop-blur-2xl
         transition-all duration-300 ease-in-out
         flex flex-col relative
-        ${isCollapsed ? 'w-[72px]' : 'w-[260px]'}
+        ${settings.isCollapsed ? 'w-[72px]' : 'w-[260px]'}
       `}
     >
       {/* Header */}
       <div className="h-16 flex items-center px-5 relative">
         <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--theme-border)] to-transparent" />
-        <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'gap-3'}`}>
+        <div className={`flex items-center ${settings.isCollapsed ? 'justify-center w-full' : 'gap-3'}`}>
           <div
             className={`
               w-8 h-8 rounded-xl
@@ -41,11 +45,11 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
               hover:shadow-xl hover:scale-105
               transition-all duration-300
             `}
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={toggleCollapsed}
           >
             <span className="text-sm font-bold tracking-wider text-[var(--theme-background-hover)]">BF</span>
           </div>
-          {!isCollapsed && (
+          {!settings.isCollapsed && (
             <span className="font-semibold tracking-wide whitespace-nowrap text-[var(--theme-text)]">
               BeatForge
             </span>
@@ -63,7 +67,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
               onClick={() => handleNavigate(item.id)}
               className={`
                 text flex items-center
-                ${isCollapsed ? 'justify-center' : 'gap-3'}
+                ${settings.isCollapsed ? 'justify-center' : 'gap-3'}
                 p-3 rounded-xl
                 transition-all duration-200
                 group relative
@@ -71,7 +75,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
                   ? 'bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-hover)]'
                   : 'hover:bg-[var(--theme-surface-hover)]'
                 }
-                ${!isActive && !isCollapsed && 'hover:translate-x-1.5'}
+                ${!isActive && !settings.isCollapsed && 'hover:translate-x-1.5'}
               `}
             >
               <div className={`
@@ -85,7 +89,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
               `}>
                 {item.icon}
               </div>
-              {!isCollapsed && (
+              {!settings.isCollapsed && (
                 <span className={`
                   text font-medium tracking-wide
                   transition-colors duration-200
@@ -111,7 +115,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
       </div>
 
       {/* Footer */}
-      {!isCollapsed && (
+      {!settings.isCollapsed && (
         <div className="p-5 mb-6 relative">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--theme-border)] to-transparent" />
           <div className="text-xs space-y-1">

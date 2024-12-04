@@ -7,6 +7,8 @@ interface Settings {
   volume: number;
   /** Display mode for the beats list */
   viewMode: 'grid' | 'list';
+  /** Sidebar collapsed state */
+  isCollapsed: boolean;
 }
 
 /** Context interface for settings management */
@@ -29,6 +31,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
   const [settings, setSettings] = useState<Settings>({
     volume: 1,
     viewMode: 'grid',
+    isCollapsed: false,
   });
 
   /** Loads saved settings from persistent storage */
