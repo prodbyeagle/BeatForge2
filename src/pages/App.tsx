@@ -8,6 +8,7 @@ import AlbumLibrary from "./AlbumLibrary";
 import Settings from "./Settings";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { BeatsProvider } from "../contexts/BeatsContext";
+import { useSettings } from "../contexts/SettingsContext";
 import TitleBar from "../components/TitleBar";
 import PlayerControls from "../components/PlayerControls";
 import { Track } from "../types/Track";
@@ -19,8 +20,48 @@ export default function App() {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
+  const { settings, updateSettings } = useSettings();
+  const [volume, setVolume] = useState(settings.volume);
+  const [isMuted, setIsMuted] = useState(false);
+  const [prevVolume, setPrevVolume] = useState(settings.volume);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  const debouncedVolume = useDebounce(volume, 500);
+
+  useEffect(() => {
+    if (debouncedVolume !== settings.volume) {
+      updateSettings({ volume: debouncedVolume });
+    }
+  }, [debouncedVolume, settings.volume, updateSettings]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      const handleTimeUpdate = () => {
+        if (audioRef.current) {
+          setCurrentTime(audioRef.current.currentTime);
+        }
+      };
+
+      const handleDurationChange = () => {
+        if (audioRef.current) {
+          setDuration(audioRef.current.duration);
+        }
+      };
+
+      audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
+      audioRef.current.addEventListener('durationchange', handleDurationChange);
+
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+          audioRef.current.removeEventListener('durationchange', handleDurationChange);
+        }
+      };
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -29,6 +70,50 @@ export default function App() {
       }
     };
   }, [audioUrl]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+
+  function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  }
+
+  const handleTimelineChange = (time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+    }
+  };
+
+  const handleVolumeChange = (newVolume: number) => {
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
+
+  const handleToggleMute = () => {
+    if (isMuted) {
+      setVolume(prevVolume);
+      setIsMuted(false);
+    } else {
+      setPrevVolume(volume);
+      setVolume(0);
+      setIsMuted(true);
+    }
+  };
 
   const handlePlayPause = async (track?: Track) => {
     const audio = audioRef.current;
@@ -117,6 +202,13 @@ export default function App() {
                   currentTrack={currentTrack}
                   isPlaying={isPlaying}
                   onPlayPause={() => handlePlayPause()}
+                  onTimelineChange={handleTimelineChange}
+                  onVolumeChange={handleVolumeChange}
+                  onToggleMute={handleToggleMute}
+                  volume={volume}
+                  isMuted={isMuted}
+                  currentTime={currentTime}
+                  duration={duration}
                 />
               </div>
             </div>
