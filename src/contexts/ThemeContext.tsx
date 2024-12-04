@@ -17,7 +17,7 @@ interface ThemeContextType {
 }
 
 /** Store instance for theme persistence */
-const store = new LazyStore('settings.json');
+const store = new LazyStore('themes.json');
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
