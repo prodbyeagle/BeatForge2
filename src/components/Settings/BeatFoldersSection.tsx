@@ -1,33 +1,37 @@
+import { useState, useEffect } from 'react';
 import { FolderOpen, Trash2, RefreshCcw } from 'lucide-react';
 import Button from '../Button';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useBeats } from '../../contexts/BeatsContext';
-import { useEffect, useState } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
 
 interface BeatFoldersSectionProps {
-  isLoading: boolean;
-  isIndexing: boolean;
-  onSelectFolder: () => void;
-  onOpenDeleteModal: () => void;
-  onOpenClearIndexModal: () => void;
-  onDeleteFolder: (folder: string) => void;
+  isLoading?: boolean;
+  onSelectFolder?: () => void;
+  onOpenDeleteModal?: () => void;
+  onOpenClearIndexModal?: () => void;
+  onDeleteFolder?: (folder: string) => void;
   indexingProgress?: {
     current: number;
     total: number;
+    percentage: number;
   };
+  isIndexing?: boolean;
 }
 
 export const BeatFoldersSection = ({
   isLoading,
-  isIndexing,
-  onSelectFolder,
   onOpenDeleteModal,
   onOpenClearIndexModal,
   onDeleteFolder,
-  indexingProgress
 }: BeatFoldersSectionProps) => {
-  const { settings } = useSettings();
-  const { refreshBeats: refreshBeatsFromContext } = useBeats();
+  const { settings, updateSettings } = useSettings();
+  const { 
+    indexingProgress: beatsIndexingProgress, 
+    isIndexing: beatsIsIndexing, 
+    loadBeatsWithProgress 
+  } = useBeats();
+
   const [beatFolders, setBeatFolders] = useState<string[]>([]);
 
   useEffect(() => {
@@ -35,6 +39,28 @@ export const BeatFoldersSection = ({
       setBeatFolders(settings.beatFolders);
     }
   }, [settings.beatFolders]);
+
+  const handleAddFolder = async () => {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: true,
+      });
+
+      if (selected) {
+        const newFolders = Array.isArray(selected) 
+          ? selected.filter(Boolean).map(f => f)
+          : [selected];
+        
+        const updatedFolders = [...(settings.beatFolders || []), ...newFolders];
+        updateSettings({ beatFolders: updatedFolders });
+
+        await loadBeatsWithProgress(updatedFolders);
+      }
+    } catch (error) {
+      console.error('Error adding beat folder:', error);
+    }
+  };
 
   return (
     <section className="bg-[var(--theme-surface)] rounded-2xl overflow-hidden shadow-lg transition-all duration-300">
@@ -45,7 +71,7 @@ export const BeatFoldersSection = ({
       <div className="p-6">
         <div className="flex items-center gap-4 mb-6">
           <Button
-            onClick={onSelectFolder}
+            onClick={handleAddFolder}
             variant="secondary"
             className="flex-1 py-3 transition-all duration-300"
           >
@@ -72,7 +98,9 @@ export const BeatFoldersSection = ({
           <Button
             onClick={async () => {
               try {
-                await refreshBeatsFromContext();
+                if (settings.beatFolders) {
+                  await loadBeatsWithProgress(settings.beatFolders);
+                }
               } catch (error) {
                 console.error('Error refreshing beats:', error);
               }
@@ -103,17 +131,32 @@ export const BeatFoldersSection = ({
           </div>
         ) : (
           <div className="space-y-3">
-            {isIndexing && (
-              <div className="flex flex-col items-center justify-center p-8 gap-4">
-                <div className="relative w-12 h-12">
-                  <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full border-4 border-[var(--theme-border)]"></div>
-                  <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full border-4 border-t-[var(--theme-accent)] animate-spin"></div>
+            {beatsIsIndexing && beatsIndexingProgress && (
+              <div className="indexing-overlay">
+                <div className="indexing-content">
+                  <div className="spinner">
+                    <div className="spinner-inner"></div>
+                  </div>
+                  <div className="indexing-text">
+                    {beatsIndexingProgress ? (
+                      <>
+                        <p>Indexing Beats</p>
+                        <div className="progress-bar">
+                          <div 
+                            className="progress-bar-fill" 
+                            style={{ width: `${beatsIndexingProgress.percentage}%` }}
+                          ></div>
+                        </div>
+                        <p className="progress-details">
+                          {beatsIndexingProgress.current} / {beatsIndexingProgress.total} 
+                          {` (${beatsIndexingProgress.percentage}%)`}
+                        </p>
+                      </>
+                    ) : (
+                      <p>Initializing Beat Indexing...</p>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-[var(--theme-text)] opacity-70 animate-pulse">
-                  {indexingProgress 
-                    ? `Indexing ${indexingProgress.current} of ${indexingProgress.total} Beats (${Math.round((indexingProgress.current / indexingProgress.total) * 100)}%)`
-                    : 'Indexing beats...'}
-                </p>
               </div>
             )}
             {beatFolders.map((folder) => (
@@ -126,7 +169,11 @@ export const BeatFoldersSection = ({
                   <span className="text-sm truncate">{folder}</span>
                 </div>
                 <Button
-                  onClick={() => onDeleteFolder(folder)}
+                  onClick={() => {
+                    const updatedFolders = settings.beatFolders?.filter(f => f !== folder) || [];
+                    updateSettings({ beatFolders: updatedFolders });
+                    onDeleteFolder?.(folder);
+                  }}
                   variant="secondary"
                 >
                   <Trash2 className="w-5 h-5" />

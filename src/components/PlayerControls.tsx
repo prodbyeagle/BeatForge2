@@ -115,7 +115,7 @@ const PlayerControls = ({
     }
     volumeTimeoutRef.current = setTimeout(() => {
       onVolumeChange(newVolume);
-    }, 100);
+    }, 500);
   };
 
   useEffect(() => {

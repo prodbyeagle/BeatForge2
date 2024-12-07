@@ -44,7 +44,10 @@ const createWorker = (entries: ExtendedDirEntry[], existingBeatsMap: Map<string,
   });
 };
 
-export const loadBeats = async (folders: string[]): Promise<Beat[]> => {
+export const loadBeats = async (
+  folders: string[], 
+  onProgress?: (progress: { current: number; total: number; percentage: number }) => void
+): Promise<Beat[]> => {
   const stats: LoadStats = {
     totalBeats: 0,
     processedBeats: 0,
@@ -78,6 +81,18 @@ export const loadBeats = async (folders: string[]): Promise<Beat[]> => {
   let allBeats: Beat[] = [];
   const loadErrors: string[] = [];
 
+  // Calculate total number of files to process
+  const totalFiles = await Promise.all(
+    folders.map(async (folder) => {
+      const normalizedPath = folder.replace(/\\/g, '/');
+      const entries = await readDir(normalizedPath) as ExtendedDirEntry[];
+      return entries.length;
+    })
+  );
+
+  const totalFilesCount = totalFiles.reduce((a, b) => a + b, 0);
+  let processedFilesCount = 0;
+
   // Parallele Verarbeitung der Ordner
   const folderPromises = folders.map(async (folder) => {
     try {
@@ -98,7 +113,21 @@ export const loadBeats = async (folders: string[]): Promise<Beat[]> => {
 
       // Verarbeite Batches parallel
       const batchResults = await Promise.all(
-        batches.map(batch => createWorker(batch, existingBeatsMap))
+        batches.map(async (batch) => {
+          const result = await createWorker(batch, existingBeatsMap);
+          processedFilesCount += batch.length;
+          
+          // Call progress callback if provided
+          if (onProgress) {
+            onProgress({
+              current: processedFilesCount,
+              total: totalFilesCount,
+              percentage: Math.round((processedFilesCount / totalFilesCount) * 100)
+            });
+          }
+          
+          return result;
+        })
       );
 
       return batchResults.flat();

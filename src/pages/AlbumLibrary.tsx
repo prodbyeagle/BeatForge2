@@ -4,11 +4,14 @@ import {
   ArrowUpDown,
   ChevronDown,
   Music2,
+  PlusCircle,
 } from "lucide-react";
 import { useBeats } from "../contexts/BeatsContext";
 import { Track } from "../types/Track";
 import { Album } from "../types/Album";
 import Button from "../components/Button";
+import Modal from "../components/Modal";
+import { open } from '@tauri-apps/plugin-dialog';
 
 interface AlbumLibraryProps {
   onGoToAlbum: (albumName: string) => void;
@@ -20,6 +23,11 @@ const AlbumLibrary: React.FC<AlbumLibraryProps> = ({ onGoToAlbum }) => {
   const [sortOption, setSortOption] = useState<"name" | "artist">("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const [isCreateAlbumModalOpen, setIsCreateAlbumModalOpen] = useState(false);
+  const [newAlbumName, setNewAlbumName] = useState("");
+  const [newAlbumArtist, setNewAlbumArtist] = useState("");
+  const [newAlbumCoverArt, setNewAlbumCoverArt] = useState<string | null>(null);
+  const [selectedTracksForAlbum, setSelectedTracksForAlbum] = useState<Track[]>([]);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const albums: Album[] = useMemo(() => {
@@ -69,6 +77,36 @@ const AlbumLibrary: React.FC<AlbumLibraryProps> = ({ onGoToAlbum }) => {
     return Array.from(albumMap.values());
   }, [beats]);
 
+  const unassignedTracks = useMemo(() => {
+    const tracks = beats.filter(beat => 
+      !beat.album || beat.album.toLowerCase() === "unknown album"
+    ).map(beat => ({
+      id: beat.id,
+      name: beat.name,
+      title: beat.title || beat.name.replace(/\.[^/.]+$/, ""),
+      artist: beat.artist || "Unknown Artist",
+      album: "",
+      path: beat.path,
+      duration: beat.duration || "0:00",
+      bpm: beat.bpm || 0,
+      coverArt: beat.coverArt,
+      isMetadataLoaded: true,
+      format: beat.format || "",
+      size: beat.size || 0,
+      lastModified: beat.lastModified || 0,
+    }));
+
+    console.log('Unassigned Tracks Debug:', {
+      totalBeats: beats.length,
+      unassignedTracksCount: tracks.length,
+      unassignedTracks: tracks,
+      beatsWithAlbum: beats.filter(beat => beat.album && beat.album.toLowerCase() !== "unknown album"),
+      beatsWithoutAlbum: beats.filter(beat => !beat.album || beat.album.toLowerCase() === "unknown album")
+    });
+
+    return tracks;
+  }, [beats]);
+
   const filteredAlbums = useMemo(() => {
     const filtered = albums.filter(
       (album) =>
@@ -96,12 +134,71 @@ const AlbumLibrary: React.FC<AlbumLibraryProps> = ({ onGoToAlbum }) => {
     return hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
   };
 
+  const handleSelectCoverArt = async () => {
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [{
+          name: 'Image',
+          extensions: ['png', 'jpeg', 'jpg', 'webp']
+        }]
+      });
+
+      if (selected) {
+        setNewAlbumCoverArt(selected as string);
+      }
+    } catch (error) {
+      console.error('Error selecting cover art:', error);
+    }
+  };
+
+  const handleCreateAlbum = () => {
+    if (!newAlbumName) {
+      // TODO: Add proper error handling/toast
+      console.error('Album name is required');
+      return;
+    }
+
+    // TODO: Implement actual album creation logic
+    console.log('Creating album:', {
+      name: newAlbumName,
+      artist: newAlbumArtist,
+      coverArt: newAlbumCoverArt,
+      tracks: selectedTracksForAlbum
+    });
+
+    // Reset modal state
+    setIsCreateAlbumModalOpen(false);
+    setNewAlbumName("");
+    setNewAlbumArtist("");
+    setNewAlbumCoverArt(null);
+    setSelectedTracksForAlbum([]);
+  };
+
+  const toggleTrackSelection = (track: Track) => {
+    setSelectedTracksForAlbum(prev => 
+      prev.includes(track) 
+        ? prev.filter(t => t.id !== track.id)
+        : [...prev, track]
+    );
+  };
+
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-[var(--theme-surface)] p-3 sm:p-4 rounded-xl">
-          <h1 className="text-xl sm:text-2xl font-bold text-[var(--theme-text)]">Albums</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--theme-text)]">Albums</h1>
+            <Button 
+              variant="secondary" 
+              onClick={() => setIsCreateAlbumModalOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <PlusCircle size={18} />
+              Create Album
+            </Button>
+          </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
             {/* Search Bar */}
@@ -204,6 +301,106 @@ const AlbumLibrary: React.FC<AlbumLibraryProps> = ({ onGoToAlbum }) => {
           ))}
         </div>
       </div>
+
+      {/* Create Album Modal */}
+      <Modal
+        isOpen={isCreateAlbumModalOpen}
+        onClose={() => setIsCreateAlbumModalOpen(false)}
+        title="Create New Album"
+        description="Add details for your new album"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Album Name</label>
+            <input 
+              type="text" 
+              value={newAlbumName}
+              onChange={(e) => setNewAlbumName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+              placeholder="Enter album name"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Artist</label>
+            <input 
+              type="text" 
+              value={newAlbumArtist}
+              onChange={(e) => setNewAlbumArtist(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+              placeholder="Enter artist name"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Cover Art</label>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="secondary" 
+                onClick={handleSelectCoverArt}
+              >
+                Select Cover Art
+              </Button>
+              {newAlbumCoverArt && (
+                <img 
+                  src={newAlbumCoverArt} 
+                  alt="Album Cover" 
+                  className="w-20 h-20 object-cover rounded-md" 
+                />
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Add Tracks</h3>
+            <div className="max-h-64 overflow-y-auto border rounded-md">
+              {unassignedTracks.map(track => (
+                <div 
+                  key={track.id} 
+                  className={`flex items-center p-2 border-b hover:bg-[var(--theme-surface-hover)] cursor-pointer ${
+                    selectedTracksForAlbum.includes(track) ? 'bg-[var(--theme-accent)] bg-opacity-20' : ''
+                  }`}
+                  onClick={() => toggleTrackSelection(track)}
+                >
+                  <input 
+                    type="checkbox" 
+                    checked={selectedTracksForAlbum.includes(track)}
+                    onChange={() => toggleTrackSelection(track)}
+                    className="mr-3"
+                  />
+                  <div className="flex-1 flex items-center">
+                    <div className="flex-1">
+                      <div className="font-medium">{track.title}</div>
+                      <div className="text-sm text-[var(--theme-text-secondary)]">
+                        {track.artist} • {track.duration}
+                      </div>
+                    </div>
+                    <div className="text-xs text-[var(--theme-text-secondary)] ml-4">
+                      {track.format.toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4 mt-6">
+            <Button 
+              variant="secondary" 
+              onClick={() => setIsCreateAlbumModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="primary" 
+              onClick={handleCreateAlbum}
+              disabled={!newAlbumName}
+            >
+              Create Album
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

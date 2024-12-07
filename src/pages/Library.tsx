@@ -52,7 +52,7 @@ const Library: React.FC<LibraryProps> = ({
     album: beat.album || 'Unknown Album',
     path: beat.path,
     duration: beat.duration || '0:00',
-    bpm: beat.bpm || 0,
+    bpm: beat.bpm ?? 0,  
     key: beat.key || 'Unknown',
     format: beat.format,
     coverArt: beat.coverArt,
@@ -86,7 +86,9 @@ const Library: React.FC<LibraryProps> = ({
   }, [tracks, searchQuery, sortOption, sortDirection]);
 
   const analyzeBPM = async (track: Track) => {
-    if (track.bpm !== 0 || isAnalyzing) return;
+    if (track.bpm !== 0 || isAnalyzing) {
+      return;
+    }
 
     try {
       setIsAnalyzing(track.id);
@@ -96,7 +98,6 @@ const Library: React.FC<LibraryProps> = ({
       const arrayBuffer = fileData.buffer;
       
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      
       const result = await realtimeBpm.analyzeFullBuffer(audioBuffer);
       
       if (result && result.length > 0) {
@@ -106,6 +107,7 @@ const Library: React.FC<LibraryProps> = ({
           ...track,
           bpm: detectedBPM
         });
+      } else {
       }
     } catch (error) {
       console.error('Error analyzing BPM:', error);

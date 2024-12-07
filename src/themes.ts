@@ -49,26 +49,17 @@ interface ThemesData {
   themes: Theme[];
 }
 
-// Import themes from JSON file
 import themesJson from './themes.json';
 const themesData = themesJson as ThemesData;
-
-// Export themes array
 export const themes: Theme[] = themesData.themes;
-
-// Export default theme (first theme in the array)
 export const defaultTheme: Theme = themes[0];
-
-// Helper function to generate CSS variable name
 export const cssVar = (name: string) => `var(--theme-${name})`;
 
-// Helper function to generate opacity variant
 export const withOpacity = (color: string, opacity: number) => {
   const rgb = hexToRgb(color);
   return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})` : color;
 };
 
-// Helper function to convert hex to rgb
 export const hexToRgb = (hex: string) => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? {
@@ -78,6 +69,5 @@ export const hexToRgb = (hex: string) => {
   } : null;
 };
 
-// Helper function to generate gradient
-export const gradient = (from: string, to: string, direction = '45deg') => 
+export const gradient = (from: string, to: string, direction = '45deg') =>
   `linear-gradient(${direction}, ${from}, ${to})`;
