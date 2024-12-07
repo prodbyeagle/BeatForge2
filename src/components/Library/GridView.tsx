@@ -19,7 +19,7 @@ const GridView: React.FC<GridViewProps> = ({
   handleContextMenu
 }) => {
   return (
-    <div className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 p-6">
+    <div className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 p-6 mb-8">
       {filteredTracks.map((track) => (
         <div
           key={track.id}

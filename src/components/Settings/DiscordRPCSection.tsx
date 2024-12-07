@@ -5,6 +5,12 @@ interface Settings {
     details: string;
     largeImageKey: string;
     smallImageKey: string;
+    customClientId?: string;
+    showPlayingBeat: boolean;
+    showBeatDetails: {
+      name: boolean;
+      producer: boolean;
+    };
   };
 }
 
@@ -17,6 +23,12 @@ interface DiscordRPCSectionProps {
   onSetCustomDetails: (details: string) => void;
   onSetLargeImageKey: (key: string) => void;
   onSetSmallImageKey: (key: string) => void;
+  onSetShowPlayingBeat: (showPlayingBeat: boolean) => void;
+  onSetShowBeatDetails: (showBeatDetails: {
+    name: boolean;
+    producer: boolean;
+  }) => void;
+  onSetCustomClientId: (customClientId: string | undefined) => void;
 }
 
 export const DiscordRPCSection = ({
@@ -28,7 +40,22 @@ export const DiscordRPCSection = ({
   onSetCustomDetails,
   onSetLargeImageKey,
   onSetSmallImageKey,
+  onSetShowPlayingBeat,
+  onSetShowBeatDetails,
+  onSetCustomClientId,
 }: DiscordRPCSectionProps) => {
+  console.log('[DiscordRPCSection] Current settings:', settings.discordRPC);
+
+  const showBeatDetails = settings.discordRPC?.showBeatDetails;
+
+  const handleShowBeatDetailsChange = (key: string, value: boolean) => {
+    console.log('[DiscordRPCSection] Updating beat details setting:', key, value);
+    onSetShowBeatDetails({
+      ...showBeatDetails,
+      [key]: value,
+    });
+  };
+
   return (
     <section className="bg-[var(--theme-surface)] rounded-2xl overflow-hidden shadow-lg transition-all duration-300">
       <div className="px-6 py-4 border-b border-[var(--theme-border)] flex items-center justify-between">
@@ -76,6 +103,77 @@ export const DiscordRPCSection = ({
           </div>
 
           <div className="space-y-4">
+            {/* Custom Client ID */}
+            <div className="rounded-xl bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface-hover)] transition-all duration-300 p-4">
+              <label className="block text-sm font-medium mb-2 opacity-70">Custom Client ID (Optional)</label>
+              <input
+                type="text"
+                value={settings.discordRPC.customClientId || ''}
+                onChange={async (e) => {
+                  await onUpdateSettings({
+                    discordRPC: {
+                      ...settings.discordRPC,
+                      customClientId: e.target.value || undefined,
+                    },
+                  });
+                  onSetCustomClientId(e.target.value || undefined);
+                }}
+                className="w-full px-4 py-2 bg-[var(--theme-background)] border border-[var(--theme-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] transition-all duration-300"
+                placeholder="Enter your Discord Application Client ID"
+              />
+            </div>
+
+            {/* Show Playing Beat Toggle */}
+            <div className="rounded-xl bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface-hover)] transition-all duration-300 p-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium opacity-70">Show Currently Playing Beat</label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={settings.discordRPC.showPlayingBeat}
+                    onChange={async (e) => {
+                      await onUpdateSettings({
+                        discordRPC: {
+                          ...settings.discordRPC,
+                          showPlayingBeat: e.target.checked,
+                        },
+                      });
+                      onSetShowPlayingBeat(e.target.checked);
+                    }}
+                  />
+                  <div className="w-11 h-6 bg-[var(--theme-surface-hover)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--theme-accent)]"></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Beat Details Settings */}
+            {settings.discordRPC.showPlayingBeat && (
+              <div className="rounded-xl bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface-hover)] transition-all duration-300 p-4">
+                <label className="block text-sm font-medium mb-4 opacity-70">Show Beat Details</label>
+                <div className="space-y-3">
+                  {Object.entries({
+                    name: 'Beat Name',
+                    producer: 'Producer',
+                  }).map(([key, label]) => (
+                    <div key={key} className="flex items-center justify-between">
+                      <span className="text-sm opacity-70">{label}</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={showBeatDetails?.[key as keyof typeof showBeatDetails] ?? false}
+                          onChange={(e) => handleShowBeatDetailsChange(key, e.target.checked)}
+                        />
+                        <div className="w-11 h-6 bg-[var(--theme-surface-hover)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--theme-accent)]"></div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Status */}
             <div className="rounded-xl bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface-hover)] transition-all duration-300 p-4">
               <label className="block text-sm font-medium mb-2 opacity-70">Status</label>
               <input
@@ -95,6 +193,7 @@ export const DiscordRPCSection = ({
               />
             </div>
 
+            {/* Details */}
             <div className="rounded-xl bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface-hover)] transition-all duration-300 p-4">
               <label className="block text-sm font-medium mb-2 opacity-70">Details</label>
               <input
@@ -114,6 +213,7 @@ export const DiscordRPCSection = ({
               />
             </div>
 
+            {/* Large Image Key */}
             <div className="rounded-xl bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface-hover)] transition-all duration-300 p-4">
               <label className="block text-sm font-medium mb-2 opacity-70">Large Image Key</label>
               <input
@@ -133,6 +233,7 @@ export const DiscordRPCSection = ({
               />
             </div>
 
+            {/* Small Image Key */}
             <div className="rounded-xl bg-[var(--theme-surface)] backdrop-blur-sm hover:bg-[var(--theme-surface-hover)] transition-all duration-300 p-4">
               <label className="block text-sm font-medium mb-2 opacity-70">Small Image Key</label>
               <input

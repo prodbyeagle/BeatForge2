@@ -32,6 +32,12 @@ const Settings = () => {
   }, []);
 
   useEffect(() => {
+    if (settings.beatFolders) {
+      setBeatFolders(settings.beatFolders);
+    }
+  }, [settings.beatFolders]);
+
+  useEffect(() => {
     if (!settings.discordRPC) {
       updateSettings({
         discordRPC: {
@@ -40,6 +46,12 @@ const Settings = () => {
           details: 'Using BeatForge',
           largeImageKey: 'beatforge_logo',
           smallImageKey: 'music_note',
+          customClientId: undefined,
+          showPlayingBeat: false,
+          showBeatDetails: {
+            name: false,
+            producer: false,
+          }
         },
       });
     }
@@ -57,8 +69,11 @@ const Settings = () => {
 
   const loadBeatFolders = async () => {
     try {
+      setIsLoading(true);
       const currentSettings = await updateSettings({});
-      setBeatFolders(currentSettings.beatFolders || []);
+      if (currentSettings.beatFolders) {
+        setBeatFolders(currentSettings.beatFolders);
+      }
     } catch (error) {
       console.error('Error loading beat folders:', error);
     } finally {
@@ -69,6 +84,7 @@ const Settings = () => {
   const saveBeatFolders = async (folders: string[]) => {
     try {
       await updateSettings({ beatFolders: folders });
+      setBeatFolders(folders);
     } catch (error) {
       console.error('Error saving beat folders:', error);
     }
@@ -152,28 +168,78 @@ const Settings = () => {
             settings={settings}
             connectionStatus={connectionStatus}
             onUpdateSettings={updateSettings}
-            onSetEnabled={setIsEnabled}
-            onSetCustomState={setCustomState}
-            onSetCustomDetails={setCustomDetails}
-            onSetLargeImageKey={setLargeImageKey}
-            onSetSmallImageKey={setSmallImageKey}
+            onSetEnabled={(enabled) => {
+              updateSettings({
+                discordRPC: {
+                  ...settings.discordRPC,
+                  enabled,
+                },
+              });
+            }}
+            onSetCustomState={(state) => {
+              updateSettings({
+                discordRPC: {
+                  ...settings.discordRPC,
+                  status: state,
+                },
+              });
+            }}
+            onSetCustomDetails={(details) => {
+              updateSettings({
+                discordRPC: {
+                  ...settings.discordRPC,
+                  details,
+                },
+              });
+            }}
+            onSetLargeImageKey={(key) => {
+              updateSettings({
+                discordRPC: {
+                  ...settings.discordRPC,
+                  largeImageKey: key,
+                },
+              });
+            }}
+            onSetSmallImageKey={(key) => {
+              updateSettings({
+                discordRPC: {
+                  ...settings.discordRPC,
+                  smallImageKey: key,
+                },
+              });
+            }}
+            onSetCustomClientId={(clientId) => {
+              updateSettings({
+                discordRPC: {
+                  ...settings.discordRPC,
+                  customClientId: clientId,
+                },
+              });
+            }}
+            onSetShowPlayingBeat={(showPlayingBeat) => {
+              updateSettings({
+                discordRPC: {
+                  ...settings.discordRPC,
+                  showPlayingBeat,
+                },
+              });
+            }}
+            onSetShowBeatDetails={(showBeatDetails) => {
+              updateSettings({
+                discordRPC: {
+                  ...settings.discordRPC,
+                  showBeatDetails,
+                },
+              });
+            }}
           />
 
           <BeatFoldersSection
             isLoading={isLoading}
             isIndexing={isIndexing}
-            beatFolders={beatFolders}
             onSelectFolder={handleSelectFolder}
             onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
             onOpenClearIndexModal={() => setIsClearIndexModalOpen(true)}
-            onRefreshBeats={async () => {
-              setIsIndexing(true);
-              try {
-                await refreshBeats();
-              } finally {
-                setIsIndexing(false);
-              }
-            }}
             onDeleteFolder={handleDeleteFolder}
           />
         </div>

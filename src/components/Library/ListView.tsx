@@ -1,7 +1,5 @@
-import { Play, Pause, MoreVertical } from 'lucide-react';
-import Button from '../Button';
+import { Play, Pause } from 'lucide-react';
 import { Track } from '../../types/Track';
-import { useRef } from 'react';
 import { FixedSizeList as List } from 'react-window';
 
 interface ListViewProps {
@@ -20,12 +18,8 @@ const ListView: React.FC<ListViewProps> = ({
   isPlaying,
   onTrackSelect,
   onPlayPause,
-  handleContextMenu,
-  handleTrackAction
+  handleContextMenu
 }) => {
-  const listRef = useRef<HTMLDivElement>(null);
-  const ITEM_HEIGHT = 64; // Reduzierte Höhe für kompakteres Layout
-  
   const handlePlayPause = (track: Track) => {
     if (!isPlaying) {
       onTrackSelect(track);
@@ -36,73 +30,90 @@ const ListView: React.FC<ListViewProps> = ({
   const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
     const track = filteredTracks[index];
     const isCurrentTrack = currentTrack?.id === track.id;
-    
+
     return (
       <div
         style={style}
-        className={`flex items-center justify-between py-2 px-3 hover:bg-[var(--theme-surface)] transition-all duration-200 group cursor-pointer rounded-lg ${isCurrentTrack ? 'bg-[var(--theme-surface)]' : ''}`}
+        className={`group relative flex items-center gap-4 p-3 mx-1.5 rounded-xl transition-all duration-300
+          ${isCurrentTrack
+            ? 'bg-[var(--theme-surface)] shadow-sm'
+            : 'hover:bg-[var(--theme-surface-hover)]'}`}
         onDoubleClick={() => {
           onTrackSelect(track);
-          if (!isPlaying) {
-            onPlayPause();
-          }
+          if (!isPlaying) onPlayPause();
         }}
         onContextMenu={(e) => handleContextMenu(e, track)}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="relative group shrink-0">
-            <div
-              className="w-8 h-8 rounded-lg bg-cover bg-center"
-              style={{ backgroundImage: `url(${track.coverArt})` }}
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              className={`w-8 h-8 rounded-lg absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${!isCurrentTrack ? 'opacity-0 group-hover:opacity-100' : ''} transition-opacity bg-black/50 backdrop-blur-sm hover:bg-black/60`}
+        {/* Cover Art + Play Button */}
+        <div className="relative">
+          <div
+            className="transition-all duration-300 bg-center bg-cover rounded-lg w-10 h-10 group-hover:opacity-95 shadow-sm"
+            style={{ backgroundImage: `url(${track.coverArt || '/default-cover.png'})` }}
+          >
+            <div className={`absolute inset-0 rounded-lg flex items-center justify-center
+              ${isCurrentTrack ? 'bg-black/40' : 'bg-black/0 group-hover:bg-black/40'}
+              transition-all duration-300`}
               onClick={(e) => {
                 e.stopPropagation();
                 handlePlayPause(track);
               }}
             >
-              {isCurrentTrack && isPlaying ? (
-                <Pause className="w-4 h-4" />
-              ) : (
-                <Play className="w-4 h-4 ml-0.5" />
-              )}
-            </Button>
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className={`font-medium truncate ${isCurrentTrack ? 'text-[var(--theme-accent)]' : ''}`}>{track.title}</h3>
-            <p className="text-sm text-[var(--theme-text)] truncate">{track.artist}</p>
+              <div className={`w-7 h-7 rounded-full bg-black/70 backdrop-blur-sm flex items-center justify-center
+                transform transition-all duration-300 hover:scale-105
+                ${isCurrentTrack ? 'opacity-100 scale-100' : 'opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100'}`}
+              >
+                {isCurrentTrack && isPlaying ? (
+                  <Pause className="w-3.5 h-3.5 text-white" />
+                ) : (
+                  <Play className="w-3.5 h-3.5 text-white ml-0.5" />
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-sm text-[var(--theme-text)] shrink-0">
-          <span className="w-32 truncate">{track?.album || 'Unknown Album'}</span>
-          <span className="w-20 text-center">{track.bpm ? `${track.bpm} BPM` : '-'}</span>
-          <span className="w-16 text-right">{track.duration}</span>
-          
-          <Button
-            variant="secondary"
-            size="sm"
-            className="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-[var(--theme-surface-hover)]"
-            onClick={() => handleTrackAction(track)}
-          >
-            <MoreVertical className="w-4 h-4" />
-          </Button>
+        {/* Track Info */}
+        <div className="flex-1 min-w-0 pr-4">
+          <h3 className={`text-sm font-medium truncate mb-0.5
+            ${isCurrentTrack ? 'text-[var(--theme-accent)]' : ''}`}>
+            {track.title}
+          </h3>
+          <p className="text-xs truncate transition-opacity duration-300 opacity-60 group-hover:opacity-80">
+            {track.artist || 'Unknown Artist'}
+          </p>
+        </div>
+
+        {/* Album */}
+        <div className="hidden w-40 md:block">
+          <p className="text-xs truncate transition-opacity duration-300 opacity-60 group-hover:opacity-80">
+            {track.album || 'Unknown Album'}
+          </p>
+        </div>
+
+        {/* BPM */}
+        <div className="items-center justify-end hidden w-16 lg:flex">
+          {track.bpm ? (
+            <div className="text-xs px-2 py-1 rounded-full bg-[var(--theme-surface-hover)] font-medium">
+              {track.bpm} BPM
+            </div>
+          ) : null}
+        </div>
+
+        {/* Duration */}
+        <div className="w-16 text-right">
+          <span className="text-xs font-medium opacity-60 group-hover:opacity-80">{track.duration}</span>
         </div>
       </div>
     );
   };
 
   return (
-    <div ref={listRef} className="p-4">
+    <div className="h-full overflow-hidden px-1">
       <List
-        height={750}
-        width="100%"
+        height={window.innerHeight - 200}
+        width="calc(100% - 2px)"
         itemCount={filteredTracks.length}
-        itemSize={ITEM_HEIGHT}
-        className="scrollbar-thin scrollbar-thumb-[var(--theme-surface)] scrollbar-track-transparent"
+        itemSize={64}
       >
         {Row}
       </List>

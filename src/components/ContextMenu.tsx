@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Track } from '../types/Track';
+import { useQueue } from '../contexts/QueueContext';
 
 /**
  * Props for the ContextMenu component
@@ -24,6 +25,8 @@ interface ContextMenuProps {
   isAnalyzing?: boolean;
   /** Optional callback function to navigate to album view */
   onGoToAlbum?: (album: string) => void;
+  /** Optional callback function to open BPM modal */
+  openBPMModal?: (track: Track) => void;
 }
 
 /**
@@ -45,8 +48,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   onAnalyzeBPM,
   isAnalyzing,
   onGoToAlbum,
+  openBPMModal,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const { addToQueue } = useQueue();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -95,6 +100,20 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           </li>
         )}
 
+        {openBPMModal && track.bpm !== 0 && (
+          <li>
+            <button
+              onClick={() => {
+                openBPMModal(track);
+                onClose();
+              }}
+              className="w-full px-4 py-2 text-left hover:bg-[var(--theme-border)] rounded-md transition-all duration-300"
+            >
+              Edit BPM Manual
+            </button>
+          </li>
+        )}
+
         <li>
           <button
             onClick={() => {
@@ -119,6 +138,18 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           </button>
         </li>
 
+        <li>
+          <button
+            onClick={() => {
+              addToQueue(track);
+              onClose();
+            }}
+            className="w-full px-4 py-2 text-left hover:bg-[var(--theme-border)] rounded-md transition-all duration-300"
+          >
+            Add to Queue
+          </button>
+        </li>
+
         {onGoToAlbum && (
           <li>
             <button
@@ -132,15 +163,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             </button>
           </li>
         )}
-
-        <li>
-          <button
-            disabled
-            className="w-full px-4 py-2 text-left text-[var(--theme-text)] opacity-50 cursor-default"
-          >
-            Add to Queue
-          </button>
-        </li>
 
         <li>
           <button

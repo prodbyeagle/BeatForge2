@@ -1,4 +1,4 @@
-import { Search, LayoutGrid, List, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { Search, LayoutGrid, List, ChevronDown, Music2 } from 'lucide-react';
 import Button from '../Button';
 
 interface LibraryHeaderProps {
@@ -12,6 +12,7 @@ interface LibraryHeaderProps {
   setIsSortDropdownOpen: (open: boolean) => void;
   settings: any;
   updateSettings: (settings: any) => void;
+  handleBulkBPMAnalysis?: () => void;
 }
 
 const LibraryHeader: React.FC<LibraryHeaderProps> = ({
@@ -24,7 +25,8 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
   isSortDropdownOpen,
   setIsSortDropdownOpen,
   settings,
-  updateSettings
+  updateSettings,
+  handleBulkBPMAnalysis
 }) => {
   const sortOptions = [
     { value: 'title', label: 'Title' },
@@ -32,13 +34,18 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
     { value: 'album', label: 'Album' }
   ];
 
+  const getSortOptionLabel = () => {
+    const currentOption = sortOptions.find(option => option.value === sortOption);
+    return currentOption ? currentOption.label : 'Sort';
+  };
+
   return (
     <div className="shrink-0 p-6 border-b border-[var(--theme-border)]">
       <div className="flex items-center justify-between gap-6">
         <h1 className="text-3xl font-bold">Library</h1>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--theme-text)]" />
+        <div className="flex items-center space-x-3">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--theme-text)] w-4 h-4" />
             <input
               type="text"
               placeholder="Search tracks..."
@@ -47,62 +54,72 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
               className="w-64 pl-10 pr-4 py-2.5 rounded-xl bg-[var(--theme-surface)] border border-[var(--theme-border)] focus:border-[var(--theme-border)] transition-all duration-300"
             />
           </div>
-          <div className="relative rounded-xl bg-[var(--theme-surface)] border border-[var(--theme-border)]">
-            <Button
-              variant="quaternary"
-              className="flex items-center gap-2"
-              onClick={() => {
-                setIsSortDropdownOpen(!isSortDropdownOpen);
-              }}
-            >
-              <ArrowUpDown className="w-4 h-4" />
-              <span>{sortOption}</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`} />
-            </Button>
-            {isSortDropdownOpen && (
-              <div
-                className="absolute z-10 right-0 mt-1 bg-[var(--theme-surface)] rounded-lg shadow-lg overflow-hidden"
-                onBlur={() => setIsSortDropdownOpen(false)}
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <Button
+                variant="secondary"
+                onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                className="flex items-center gap-2 hover:bg-[var(--theme-surface-hover)] h-10 justify-center"
               >
-                {sortOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    className={`px-4 py-2 transition-all duration-300 cursor-pointer hover:bg-[var(--theme-primary-hover)] ${sortOption === option.value ? 'bg-[var(--theme-border)]' : ''}`}
+                <ChevronDown size={18} />
+                {getSortOptionLabel()}
+              </Button>
+              
+              {isSortDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-[var(--theme-surface)] rounded-lg shadow-lg border border-[var(--theme-border)] py-1 z-10">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      className="w-full px-4 py-2 text-left hover:bg-[var(--theme-surface-hover)] text-[var(--theme-text)]"
+                      onClick={() => {
+                        setSortOption(option.value as 'title' | 'artist' | 'album');
+                        setIsSortDropdownOpen(false);
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                  <div className="border-t border-[var(--theme-border)] my-1" />
+                  <button
+                    className="w-full px-4 py-2 text-left hover:bg-[var(--theme-surface-hover)] text-[var(--theme-text)] flex items-center gap-2"
                     onClick={() => {
-                      setSortOption(option.value as any);
+                      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
                       setIsSortDropdownOpen(false);
                     }}
                   >
-                    {option.label}
-                  </div>
-                ))}
-                <div
-                  className="px-4 py-2 transition-all duration-300 cursor-pointer hover:bg-[var(--theme-primary-hover)] border-t border-[var(--theme-primary)]"
-                  onClick={() => {
-                    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                    setIsSortDropdownOpen(false);
-                  }}
-                >
-                  {sortDirection === 'asc' ? 'Descending' : 'Ascending'}
+                    {sortDirection === 'asc' ? 'Descending' : 'Ascending'}
+                  </button>
                 </div>
-              </div>
+              )}
+            </div>
+
+            {handleBulkBPMAnalysis && (
+              <Button
+                variant="secondary"
+                onClick={handleBulkBPMAnalysis}
+                className="flex items-center gap-2 hover:bg-[var(--theme-surface-hover)] h-10 justify-center"
+                title="Analyze BPM for all tracks without BPM"
+              >
+                <Music2 size={18} />
+                Analyze BPM
+              </Button>
             )}
-          </div>
-          <div className="flex bg-[var(--theme-surface)] rounded-xl p-1 border border-[var(--theme-border)]">
-            <Button
-              variant={settings.viewMode === 'grid' ? 'secondary' : 'tertiary'}
-              onClick={() => updateSettings({ viewMode: 'grid' })}
-              className="rounded-xl mr-1 transition-all duration-300"
-            >
-              <LayoutGrid className="w-5 h-5" />
-            </Button>
-            <Button
-              variant={settings.viewMode === 'list' ? 'secondary' : 'tertiary'}
-              onClick={() => updateSettings({ viewMode: 'list' })}
-              className="rounded-lg transition-all duration-300"
-            >
-              <List className="w-5 h-5" />
-            </Button>
+            <div className="flex bg-[var(--theme-surface)] rounded-xl p-1 border border-[var(--theme-border)]">
+              <Button
+                variant={settings.viewMode === 'grid' ? 'secondary' : 'tertiary'}
+                onClick={() => updateSettings({ viewMode: 'grid' })}
+                className="rounded-xl mr-1 transition-all duration-300"
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </Button>
+              <Button
+                variant={settings.viewMode === 'list' ? 'secondary' : 'tertiary'}
+                onClick={() => updateSettings({ viewMode: 'list' })}
+                className="rounded-lg transition-all duration-300"
+              >
+                <List className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

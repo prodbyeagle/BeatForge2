@@ -1,10 +1,9 @@
 import React, { useState, useMemo, useRef } from "react";
 import {
   Search,
-  LayoutGrid,
-  List,
   ArrowUpDown,
   ChevronDown,
+  Music2,
 } from "lucide-react";
 import { useBeats } from "../contexts/BeatsContext";
 import { Track } from "../types/Track";
@@ -21,7 +20,6 @@ const AlbumLibrary: React.FC<AlbumLibraryProps> = ({ onGoToAlbum }) => {
   const [sortOption, setSortOption] = useState<"name" | "artist">("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const gridRef = useRef<HTMLDivElement>(null);
 
   const albums: Album[] = useMemo(() => {
@@ -98,127 +96,113 @@ const AlbumLibrary: React.FC<AlbumLibraryProps> = ({ onGoToAlbum }) => {
     return hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
   };
 
-  const toggleSortDirection = () => {
-    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-  };
-
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search albums..."
-              className="w-64 pl-10 pr-4 py-2 rounded-md bg-[var(--theme-surface)] border border-[var(--theme-border)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary)]"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--theme-text-secondary)]"
-              size={20}
-            />
-          </div>
+    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-[var(--theme-surface)] p-3 sm:p-4 rounded-xl">
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--theme-text)]">Albums</h1>
+          
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            {/* Search Bar */}
+            <div className="relative flex-1 sm:flex-initial sm:min-w-[240px] md:min-w-[300px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--theme-text-secondary)]" size={18} />
+              <input
+                type="text"
+                placeholder="Search albums..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-10 pl-10 pr-4 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-background)] text-[var(--theme-text)] placeholder-[var(--theme-text-secondary)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-transparent transition-all duration-200"
+              />
+            </div>
 
-          <div className="relative">
-            <Button
-              variant="quaternary"
-              size="sm"
-              onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-              className="flex items-center"
-            >
-              Sort by {sortOption} <ChevronDown size={16} className="ml-1" />
-            </Button>
-            {isSortDropdownOpen && (
-              <div className="absolute z-10 mt-2 w-48 bg-[var(--theme-surface)] rounded-md shadow-lg">
-                <div
-                  className="px-4 py-2 hover:bg-[var(--theme-surface-hover)] cursor-pointer"
-                  onClick={() => {
-                    setSortOption("name");
-                    setIsSortDropdownOpen(false);
-                  }}
-                >
-                  Album Name
+            {/* Sort Dropdown */}
+            <div className="relative sm:self-stretch">
+              <Button
+                variant="secondary"
+                onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                className="flex items-center gap-2 hover:bg-[var(--theme-surface-hover)] h-10 w-full sm:w-auto justify-center"
+              >
+                <ArrowUpDown size={18} />
+                <ChevronDown size={18} />
+              </Button>
+              
+              {isSortDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-[var(--theme-surface)] rounded-lg shadow-lg border border-[var(--theme-border)] py-1 z-10">
+                  <button
+                    className="w-full px-4 py-2 text-left hover:bg-[var(--theme-surface-hover)] text-[var(--theme-text)]"
+                    onClick={() => {
+                      setSortOption("name");
+                      setIsSortDropdownOpen(false);
+                    }}
+                  >
+                    Sort by Name
+                  </button>
+                  <button
+                    className="w-full px-4 py-2 text-left hover:bg-[var(--theme-surface-hover)] text-[var(--theme-text)]"
+                    onClick={() => {
+                      setSortOption("artist");
+                      setIsSortDropdownOpen(false);
+                    }}
+                  >
+                    Sort by Artist
+                  </button>
+                  <div className="border-t border-[var(--theme-border)] my-1" />
+                  <button
+                    className="w-full px-4 py-2 text-left hover:bg-[var(--theme-surface-hover)] text-[var(--theme-text)]"
+                    onClick={() => {
+                      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                      setIsSortDropdownOpen(false);
+                    }}
+                  >
+                    {sortDirection === "asc" ? "Ascending" : "Descending"}
+                  </button>
                 </div>
-                <div
-                  className="px-4 py-2 hover:bg-[var(--theme-surface-hover)] cursor-pointer"
-                  onClick={() => {
-                    setSortOption("artist");
-                    setIsSortDropdownOpen(false);
-                  }}
-                >
-                  Artist
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-
-          <Button
-            variant="quaternary"
-            onClick={toggleSortDirection}
-            className={`transition-transform ${sortDirection === "desc" ? "rotate-180" : ""
-              }`}
-          >
-            <ArrowUpDown size={20} />
-          </Button>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={viewMode === "grid" ? "secondary" : "quaternary"}
-            onClick={() => setViewMode("grid")}
-          >
-            <LayoutGrid size={20} />
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "secondary" : "quaternary"}
-            onClick={() => setViewMode("list")}
-          >
-            <List size={20} />
-          </Button>
-        </div>
-      </div>
-
-      <div
-        ref={gridRef}
-        className={`
-          ${viewMode === "grid"
-            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
-            : "grid grid-cols-1 gap-2"
-          }
-        `}
-      >
-        {filteredAlbums.map((album) => (
-          <div
-            key={album.name}
-            className={`
-              bg-[var(--theme-surface)] rounded-lg p-4 group relative
-              ${viewMode === "list" ? "flex items-center space-x-4" : ""}
-            `}
-          >
+        {/* Albums Grid */}
+        <div ref={gridRef} className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
+          {filteredAlbums.map((album) => (
             <div
-              className={`
-                ${viewMode === "grid" ? "h-48 w-full mb-4" : "h-24 w-24"} 
-                bg-cover bg-center rounded-lg cursor-pointer
-              `}
-              style={{ backgroundImage: `url(${album.coverArt})` }}
+              key={album.name}
+              className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-hover)] border border-[var(--theme-border)] hover:shadow-xl hover:scale-[1.02]"
               onClick={() => onGoToAlbum(album.name)}
             >
-              <div className="absolute inset-0 rounded-lg" />
-            </div>
-
-            <div className={viewMode === "list" ? "flex-1" : ""}>
-              <h3 className="text-lg font-semibold truncate">{album.name}</h3>
-              <p className="text-sm text-[var(--theme-text-secondary)] truncate">
-                {album.artist}
-              </p>
-              <div className="text-xs text-[var(--theme-text-secondary)] mt-1">
-                {album.totalTracks} Tracks •{" "}
-                {formatDuration(album.totalDuration)}
+              <div className="w-full h-full relative">
+                {album.coverArt && album.coverArt !== "/default-cover.png" ? (
+                  <img
+                    src={album.coverArt}
+                    alt={album.name}
+                    className="w-full h-full object-cover transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-[var(--theme-surface-hover)] gap-3">
+                    <Music2 size={48} className="text-[var(--theme-text-secondary)]" />
+                    <div className="text-sm text-[var(--theme-text-secondary)] text-center px-4">
+                      <span className="font-medium">{album.name}</span>
+                    </div>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/70 group-hover:from-black/20 group-hover:to-black/80 transition-all duration-300" />
+                
+                <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 flex flex-col gap-2">
+                  <div className="text-white">
+                    <h3 className="font-semibold text-lg truncate mb-0.5">{album.name}</h3>
+                    <p className="text-sm text-white/80 truncate">{album.artist}</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-white/90 font-medium backdrop-blur-sm bg-black/30 rounded-full px-3 py-1 w-fit">
+                    <span>{album.totalTracks} tracks</span>
+                    <span className="opacity-60">•</span>
+                    <span>{formatDuration(album.totalDuration)}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

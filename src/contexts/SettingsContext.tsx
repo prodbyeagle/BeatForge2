@@ -23,6 +23,17 @@ interface Settings {
     largeImageKey: string;
     /** Small image key for Discord RPC */
     smallImageKey: string;
+    /** Optional custom Discord Application Client ID */
+    customClientId?: string;
+    /** Whether to show currently playing beat */
+    showPlayingBeat: boolean;
+    /** Beat details to show in Discord RPC */
+    showBeatDetails: {
+      /** Show beat name */
+      name: boolean;
+      /** Show producer name */
+      producer: boolean;
+    };
   };
 }
 
@@ -44,7 +55,7 @@ const store = new LazyStore('settings.json');
 /** Provider component for application settings */
 export const SettingsProvider = ({ children }: { children: React.ReactNode }) => {
   const [settings, setSettings] = useState<Settings>({
-    volume: 1,
+    volume: 0.5,
     viewMode: 'grid',
     isCollapsed: false,
     beatFolders: [],
@@ -54,6 +65,12 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
       details: 'Using BeatForge',
       largeImageKey: 'beatforge_logo',
       smallImageKey: 'music_note',
+      customClientId: undefined,
+      showPlayingBeat: true,
+      showBeatDetails: {
+        name: true,
+        producer: true,
+      },
     },
   });
 
@@ -61,13 +78,42 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const savedSettings = await store.get('settings');
+        // Lade beide möglichen Speicherorte
+        const savedSettings = await store.get('settings') as Settings | null;
+        const rootBeatFolders = await store.get('beatFolders') as string[] | null;
+
         if (savedSettings) {
-          setSettings(savedSettings as Settings);
+          // Wenn es Root-Level beatFolders gibt, migriere sie
+          if (rootBeatFolders) {
+            savedSettings.beatFolders = rootBeatFolders;
+            // Lösche die Root-Level beatFolders
+            await store.delete('beatFolders');
+          }
+
+          // Ensure volume is within valid range
+          const validVolume = savedSettings.volume !== undefined 
+            ? Math.max(0, Math.min(1, savedSettings.volume)) 
+            : 0.5;
+
+          const updatedSettings = {
+            ...savedSettings,
+            volume: validVolume
+          };
+
+          setSettings(updatedSettings);
+          // Speichere die konsolidierten Einstellungen
+          await store.set('settings', updatedSettings);
+          await store.save();
+        } else {
+          // Speichere Standardeinstellungen, wenn keine gespeicherten Einstellungen gefunden werden
+          await store.set('settings', settings);
+          await store.save();
         }
       } catch (error) {
         console.error('Failed to load settings:', error);
-        throw error;
+        // Fallback to default settings
+        await store.set('settings', settings);
+        await store.save();
       }
     };
     loadSettings();
@@ -82,7 +128,10 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
     try {
       const updatedSettings = { ...settings, ...newSettings };
       setSettings(updatedSettings);
+      // Speichere nur im settings-Objekt
       await store.set('settings', updatedSettings);
+      // Stelle sicher, dass keine Root-Level beatFolders existieren
+      await store.delete('beatFolders');
       await store.save();
       return updatedSettings;
     } catch (error) {

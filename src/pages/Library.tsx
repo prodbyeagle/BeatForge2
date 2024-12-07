@@ -13,6 +13,7 @@ import TrackActionModal from '../components/Library/TrackActionModal';
 import DeleteConfirmationModal from '../components/Library/DeleteConfirmationModal';
 import ContextMenu from '../components/ContextMenu';
 import Button from '../components/Button';
+import BPMModal from '../components/BPMModal'; // Assuming you have a BPMModal component
 
 interface LibraryProps {
   currentTrack: Track | null;
@@ -40,6 +41,8 @@ const Library: React.FC<LibraryProps> = ({
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; track: Track } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
+  const [isBPMModalOpen, setIsBPMModalOpen] = useState(false);
+  const [selectedTrackForBPM, setSelectedTrackForBPM] = useState<Track | null>(null);
 
   const tracks: Track[] = useMemo(() => beats.map(beat => ({
     id: beat.id,
@@ -135,6 +138,41 @@ const Library: React.FC<LibraryProps> = ({
     setIsActionModalOpen(true);
   };
 
+  const handleManualBPMEntry = async (bpm: number) => {
+    if (selectedTrackForBPM) {
+      try {
+        await updateBeat({
+          ...selectedTrackForBPM,
+          bpm: bpm
+        });
+        setIsBPMModalOpen(false);
+        setSelectedTrackForBPM(null);
+      } catch (error) {
+        console.error('Error updating BPM:', error);
+      }
+    }
+  };
+
+  const handleBulkBPMAnalysis = async () => {
+    try {
+      setIsAnalyzing('bulk');
+      for (const track of tracks) {
+        if (track.bpm === 0) {
+          await analyzeBPM(track);
+        }
+      }
+    } catch (error) {
+      console.error('Error in bulk BPM analysis:', error);
+    } finally {
+      setIsAnalyzing(null);
+    }
+  };
+
+  const openBPMModal = (track: Track) => {
+    setSelectedTrackForBPM(track);
+    setIsBPMModalOpen(true);
+  };
+
   return (
     <div className="h-full flex flex-col">
       <LibraryHeader
@@ -148,6 +186,7 @@ const Library: React.FC<LibraryProps> = ({
         setIsSortDropdownOpen={setIsSortDropdownOpen}
         settings={settings}
         updateSettings={updateSettings}
+        handleBulkBPMAnalysis={handleBulkBPMAnalysis}
       />
 
       <div className="flex-1 min-h-0">
@@ -206,6 +245,7 @@ const Library: React.FC<LibraryProps> = ({
           onAnalyzeBPM={contextMenu.track.bpm === 0 ? handleAnalyzeBPM : undefined}
           isAnalyzing={isAnalyzing === contextMenu.track.id}
           onGoToAlbum={onGoToAlbum}
+          openBPMModal={openBPMModal}
         />
       )}
 
@@ -219,6 +259,13 @@ const Library: React.FC<LibraryProps> = ({
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         selectedTrack={selectedTrack}
+      />
+
+      <BPMModal
+        isOpen={isBPMModalOpen}
+        onClose={() => setIsBPMModalOpen(false)}
+        selectedTrack={selectedTrackForBPM}
+        onManualBPMEntry={handleManualBPMEntry}
       />
     </div>
   );

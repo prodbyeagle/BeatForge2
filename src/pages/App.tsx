@@ -9,25 +9,81 @@ import Settings from "./Settings";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { BeatsProvider } from "../contexts/BeatsContext";
 import { useSettings } from "../contexts/SettingsContext";
+import { useDiscordRPC } from "../contexts/DiscordRPCContext";
 import TitleBar from "../components/TitleBar";
 import PlayerControls from "../components/PlayerControls";
 import { Track } from "../types/Track";
 
+/**
+ * Main application component for BeatForge
+ * Manages audio playback, navigation, and overall application state
+ */
 export default function App() {
+  /**
+   * Currently active page in the application
+   */
   const [activePage, setActivePage] = useState<
     "library" | "settings" | "albums"
   >("library");
+
+  /**
+   * Discord RPC beat details update function
+   */
+  const { updateBeatDetails } = useDiscordRPC();
+
+  /**
+   * Currently selected music track
+   */
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+
+  /**
+   * Whether audio is currently playing
+   */
   const [isPlaying, setIsPlaying] = useState(false);
+
+  /**
+   * Currently selected album
+   */
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
+
+  /**
+   * Application settings and update function
+   */
   const { settings, updateSettings } = useSettings();
+
+  /**
+   * Current audio volume
+   */
   const [volume, setVolume] = useState(settings.volume);
+
+  /**
+   * Whether audio is muted
+   */
   const [isMuted, setIsMuted] = useState(false);
+
+  /**
+   * Previous volume before muting
+   */
   const [prevVolume, setPrevVolume] = useState(settings.volume);
+
+  /**
+   * Total duration of current track
+   */
   const [duration, setDuration] = useState(0);
+
+  /**
+   * Reference to the audio element
+   */
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  /**
+   * URL for the current audio blob
+   */
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
+  /**
+   * Debounce volume changes to prevent excessive updates
+   */
   const debouncedVolume = useDebounce(volume, 500);
 
   useEffect(() => {
@@ -68,6 +124,24 @@ export default function App() {
     }
   }, [volume, isMuted]);
 
+  useEffect(() => {
+    const initialVolume = Math.max(0, Math.min(1, settings.volume));
+
+    setVolume(initialVolume);
+    setPrevVolume(initialVolume);
+    setIsMuted(initialVolume === 0);
+
+    if (audioRef.current) {
+      audioRef.current.volume = initialVolume;
+    }
+  }, [settings.volume]);
+
+  /**
+   * Debounce a value over a specified delay
+   * @param value The value to debounce
+   * @param delay Delay in milliseconds
+   * @returns Debounced value
+   */
   function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -84,17 +158,28 @@ export default function App() {
     return debouncedValue;
   }
 
+  /**
+   * Change the current playback time of the audio
+   * @param time New time position in seconds
+   */
   const handleTimelineChange = (time: number) => {
     if (audioRef.current) {
       audioRef.current.currentTime = time;
     }
   };
 
+  /**
+   * Update the audio volume
+   * @param newVolume Volume level between 0 and 1
+   */
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
   };
 
+  /**
+   * Toggle audio mute/unmute
+   */
   const handleToggleMute = () => {
     if (isMuted) {
       setVolume(prevVolume);
@@ -106,6 +191,10 @@ export default function App() {
     }
   };
 
+  /**
+   * Play or pause the current track
+   * @param track Optional track to play
+   */
   const handlePlayPause = async (track?: Track) => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -116,8 +205,13 @@ export default function App() {
       if (!track || currentTrack?.id === track.id) {
         if (isPlaying) {
           audio.pause();
+          updateBeatDetails(null);
         } else {
           await audio.play();
+          updateBeatDetails(currentTrack ? {
+            name: currentTrack.title,
+            producer: currentTrack.artist
+          } : null);
         }
         setIsPlaying(!isPlaying);
         return;
@@ -137,12 +231,22 @@ export default function App() {
       audio.src = url;
       await audio.play();
       setIsPlaying(true);
+
+      updateBeatDetails({
+        name: track.title,
+        producer: track.artist
+      });
     } catch (error) {
       console.error("Fehler beim Laden oder Abspielen:", error);
       setIsPlaying(false);
+      updateBeatDetails(null);
     }
   };
 
+  /**
+   * Navigate to a specific album
+   * @param albumName Name of the album to navigate to
+   */
   const handleGoToAlbum = (albumName: string) => {
     setSelectedAlbum(albumName);
     setActivePage("albums");

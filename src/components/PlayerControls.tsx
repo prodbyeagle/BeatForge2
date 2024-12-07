@@ -1,15 +1,19 @@
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, List } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Button from './Button';
 import { Track } from '../types/Track';
+import { QueueView } from './Queue/QueueView';
 
 interface PlayerControlsProps {
   currentTrack: Track | null;
   isPlaying: boolean;
   onPlayPause: () => void;
+  onNext: () => void;
+  onPrevious: () => void;
   onTimelineChange: (time: number) => void;
   onVolumeChange: (volume: number) => void;
   onToggleMute: () => void;
+  onTrackEnd: () => void;
   volume: number;
   isMuted: boolean;
   audioRef: React.RefObject<HTMLAudioElement>;
@@ -26,9 +30,12 @@ const PlayerControls = ({
   currentTrack,
   isPlaying,
   onPlayPause,
+  onNext,
+  onPrevious,
   onTimelineChange,
   onVolumeChange,
   onToggleMute,
+  onTrackEnd,
   volume,
   isMuted,
   audioRef,
@@ -39,6 +46,7 @@ const PlayerControls = ({
   const animationFrameRef = useRef<number>();
   const [localVolume, setLocalVolume] = useState(volume);
   const volumeTimeoutRef = useRef<NodeJS.Timeout>();
+  const [showQueue, setShowQueue] = useState(false);
 
   useEffect(() => {
     setLocalVolume(volume);
@@ -76,6 +84,15 @@ const PlayerControls = ({
       }
     };
   }, [isPlaying, audioRef]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.addEventListener('ended', onTrackEnd);
+      return () => {
+        audioRef.current?.removeEventListener('ended', onTrackEnd);
+      };
+    }
+  }, [audioRef, onTrackEnd]);
 
   const handleTimelineChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = parseFloat(e.target.value);
@@ -162,6 +179,15 @@ const PlayerControls = ({
                 variant="secondary"
                 size="sm"
                 className="w-10 h-10 rounded-full"
+                onClick={onPrevious}
+                disabled={!currentTrack}
+              >
+                <SkipBack className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-10 h-10 rounded-full"
                 onClick={onPlayPause}
                 disabled={!currentTrack}
               >
@@ -171,9 +197,26 @@ const PlayerControls = ({
                   <Play className="w-5 h-5 ml-0.5" />
                 )}
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-10 h-10 rounded-full"
+                onClick={onNext}
+                disabled={!currentTrack}
+              >
+                <SkipForward className="w-5 h-5" />
+              </Button>
             </div>
 
             <div className="flex items-center gap-2 w-[240px] lg:w-[280px] min-w-0 justify-end">
+              <button
+                onClick={() => setShowQueue(!showQueue)}
+                className={`p-2 rounded-xl transition-all duration-300 ${
+                  showQueue ? 'bg-[var(--theme-surface-hover)]' : 'hover:bg-[var(--theme-surface-hover)]'
+                }`}
+              >
+                <List className="w-5 h-5" />
+              </button>
               <Button
                 variant="secondary"
                 size="sm"
@@ -201,6 +244,7 @@ const PlayerControls = ({
           </div>
         </div>
       </div>
+      {showQueue && <QueueView onClose={() => setShowQueue(false)} currentTrack={currentTrack} />}
     </div>
   );
 };

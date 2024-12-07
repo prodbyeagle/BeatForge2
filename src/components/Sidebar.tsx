@@ -47,7 +47,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
             `}
             onClick={toggleCollapsed}
           >
-            <span className="text-sm font-bold tracking-wider text-[var(--theme-background-hover)]">BF</span>
+            <span className="text-sm font-bold tracking-wider text-[var(--theme-text)]">BF</span>
           </div>
           {!settings.isCollapsed && (
             <span className="font-semibold tracking-wide whitespace-nowrap text-[var(--theme-text)]">
@@ -91,7 +91,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
               </div>
               {!settings.isCollapsed && (
                 <span className={`
-                  text font-medium tracking-wide
+                  text font-medium
                   transition-colors duration-200
                   ${isActive
                     ? 'text-[var(--theme-text)]'
@@ -120,7 +120,7 @@ const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--theme-border)] to-transparent" />
           <div className="text-xs space-y-1">
             <p className="font-medium text-[var(--theme-text)] hover:text-[var(--theme-text)] transition-colors">
-              BeatForge v0.4.3
+              BeatForge v0.5.0
             </p>
             <p className="font-medium text-[var(--theme-text)] hover:text-[var(--theme-text)] transition-colors">
               Made with ♥ by @prodbyeagle
