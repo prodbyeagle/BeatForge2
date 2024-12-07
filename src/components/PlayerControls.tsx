@@ -206,45 +206,46 @@ const PlayerControls = ({
               >
                 <SkipForward className="w-5 h-5" />
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-10 h-10 rounded-full"
+                onClick={() => setShowQueue(!showQueue)}
+              >
+                <List className="w-5 h-5" />
+              </Button>
             </div>
 
             <div className="flex items-center gap-2 w-[240px] lg:w-[280px] min-w-0 justify-end">
-              <button
-                onClick={() => setShowQueue(!showQueue)}
-                className={`p-2 rounded-xl transition-all duration-300 ${
-                  showQueue ? 'bg-[var(--theme-surface-hover)]' : 'hover:bg-[var(--theme-surface-hover)]'
-                }`}
-              >
-                <List className="w-5 h-5" />
-              </button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={onToggleMute}
-                className="flex-shrink-0"
               >
                 {isMuted ? (
-                  <VolumeX className="w-4 h-4" />
+                  <VolumeX className="w-5 h-5" />
                 ) : (
-                  <Volume2 className="w-4 h-4" />
+                  <Volume2 className="w-5 h-5" />
                 )}
               </Button>
-              <div className="w-full max-w-[100px]">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={localVolume}
-                  onChange={handleVolumeChange}
-                  className="w-full h-1 appearance-none bg-[var(--theme-border)] rounded-full outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--theme-border)] [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-transform"
-                />
-              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={isMuted ? 0 : localVolume}
+                onChange={handleVolumeChange}
+                className="w-24 h-1 appearance-none bg-[var(--theme-border)] rounded-full outline-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--theme-border)] [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-transform"
+              />
             </div>
           </div>
         </div>
       </div>
-      {showQueue && <QueueView onClose={() => setShowQueue(false)} currentTrack={currentTrack} />}
+      {showQueue && (
+        <div className="absolute bottom-full right-0 mb-2 mr-2 w-96 z-50">
+          <QueueView onClose={() => setShowQueue(false)} currentTrack={null} />
+        </div>
+      )}
     </div>
   );
 };

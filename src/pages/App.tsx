@@ -7,12 +7,14 @@ import AlbumDetail from "./AlbumDetail";
 import AlbumLibrary from "./AlbumLibrary";
 import Settings from "./Settings";
 import { ThemeProvider } from "../contexts/ThemeContext";
-import { BeatsProvider } from "../contexts/BeatsContext";
 import { useSettings } from "../contexts/SettingsContext";
 import { useDiscordRPC } from "../contexts/DiscordRPCContext";
+import { useQueue } from '../contexts/QueueContext';
+import { useBeats } from '../contexts/BeatsContext';
 import TitleBar from "../components/TitleBar";
 import PlayerControls from "../components/PlayerControls";
 import { Track } from "../types/Track";
+import { Beat } from '../types/Beat';
 
 /**
  * Main application component for BeatForge
@@ -85,6 +87,9 @@ export default function App() {
    * Debounce volume changes to prevent excessive updates
    */
   const debouncedVolume = useDebounce(volume, 500);
+
+  const { beats } = useBeats();
+  const { getNextTrack } = useQueue();
 
   useEffect(() => {
     if (debouncedVolume !== settings.volume) {
@@ -252,62 +257,116 @@ export default function App() {
     setActivePage("albums");
   };
 
+  const handleTrackEnd = () => {
+    // First, check if there's a track in the queue
+    const queuedTrack = getNextTrack();
+    
+    if (queuedTrack) {
+      // Play the queued track
+      handlePlayPause(queuedTrack);
+    } else {
+      // If no queued track, play the next track in the library
+      const currentIndex = beats.findIndex(beat => beat.id === currentTrack?.id);
+      const nextTrackIndex = (currentIndex + 1) % beats.length;
+      handlePlayPause(convertBeatToTrack(beats[nextTrackIndex]));
+    }
+  };
+
+  const handleNext = () => {
+    // First, check if there's a track in the queue
+    const queuedTrack = getNextTrack();
+    
+    if (queuedTrack) {
+      // Play the queued track
+      handlePlayPause(queuedTrack);
+    } else {
+      // If no queued track, play the next track in the library
+      const currentIndex = beats.findIndex(beat => beat.id === currentTrack?.id);
+      const nextTrackIndex = (currentIndex + 1) % beats.length;
+      handlePlayPause(convertBeatToTrack(beats[nextTrackIndex]));
+    }
+  };
+
+  const handlePrevious = () => {
+    const currentIndex = beats.findIndex(beat => beat.id === currentTrack?.id);
+    const previousTrackIndex = (currentIndex - 1 + beats.length) % beats.length;
+    handlePlayPause(convertBeatToTrack(beats[previousTrackIndex]));
+  };
+
+  // Helper function to convert Beat to Track
+  const convertBeatToTrack = (beat: Beat): Track => ({
+    id: beat.id,
+    name: beat.name,
+    title: beat.title,
+    path: beat.path,
+    artist: beat.artist || 'Unknown Artist',
+    album: beat.album || 'Unknown Album',
+    coverArt: beat.coverArt,
+    duration: beat.duration || '0',
+    bpm: beat.bpm || 0,
+    format: beat.format,
+    size: beat.size,
+    lastModified: beat.lastModified,
+    isMetadataLoaded: beat.isMetadataLoaded
+  });
+
   return (
     <Router>
       <ThemeProvider>
-        <BeatsProvider>
-          <div className="pt-8 flex h-screen bg-[var(--theme-background)] text-[var(--theme-text)]">
-            <TitleBar />
-            <div className="flex-1 flex overflow-hidden">
-              <Sidebar
-                activePage={activePage}
-                onNavigate={(page) => {
-                  setActivePage(page);
-                  if (page !== "albums") {
-                    setSelectedAlbum(null);
-                  }
-                }}
+        <div className="pt-8 flex h-screen bg-[var(--theme-background)] text-[var(--theme-text)]">
+          <TitleBar />
+          <div className="flex-1 flex overflow-hidden">
+            <Sidebar
+              activePage={activePage}
+              onNavigate={(page) => {
+                setActivePage(page);
+                if (page !== "albums") {
+                  setSelectedAlbum(null);
+                }
+              }}
+            />
+            <div className="flex-1 flex flex-col">
+              <main className="flex-1 overflow-y-auto pb-28">
+                {selectedAlbum ? (
+                  <AlbumDetail
+                    albumName={selectedAlbum}
+                    onTrackSelect={handlePlayPause}
+                    currentTrack={currentTrack}
+                    isPlaying={isPlaying}
+                  />
+                ) : activePage === "library" ? (
+                  <Library
+                    currentTrack={currentTrack}
+                    isPlaying={isPlaying}
+                    onTrackSelect={(track) => handlePlayPause(track)}
+                    onPlayPause={() => handlePlayPause()}
+                    onGoToAlbum={handleGoToAlbum}
+                  />
+                ) : activePage === "albums" ? (
+                  <AlbumLibrary onGoToAlbum={handleGoToAlbum} />
+                ) : (
+                  <Settings />
+                )}
+              </main>
+              <PlayerControls
+                currentTrack={currentTrack}
+                isPlaying={isPlaying}
+                onPlayPause={() => handlePlayPause()}
+                onTimelineChange={handleTimelineChange}
+                onVolumeChange={handleVolumeChange}
+                onToggleMute={handleToggleMute}
+                volume={volume}
+                isMuted={isMuted}
+                audioRef={audioRef}
+                duration={duration}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+                onTrackEnd={handleTrackEnd}
               />
-              <div className="flex-1 flex flex-col">
-                <main className="flex-1 overflow-y-auto pb-28">
-                  {selectedAlbum ? (
-                    <AlbumDetail
-                      albumName={selectedAlbum}
-                      onTrackSelect={handlePlayPause}
-                      currentTrack={currentTrack}
-                      isPlaying={isPlaying}
-                    />
-                  ) : activePage === "library" ? (
-                    <Library
-                      currentTrack={currentTrack}
-                      isPlaying={isPlaying}
-                      onTrackSelect={(track) => handlePlayPause(track)}
-                      onPlayPause={() => handlePlayPause()}
-                      onGoToAlbum={handleGoToAlbum}
-                    />
-                  ) : activePage === "albums" ? (
-                    <AlbumLibrary onGoToAlbum={handleGoToAlbum} />
-                  ) : (
-                    <Settings />
-                  )}
-                </main>
-                <PlayerControls
-                  currentTrack={currentTrack}
-                  isPlaying={isPlaying}
-                  onPlayPause={() => handlePlayPause()}
-                  onTimelineChange={handleTimelineChange}
-                  onVolumeChange={handleVolumeChange}
-                  onToggleMute={handleToggleMute}
-                  volume={volume}
-                  isMuted={isMuted}
-                  audioRef={audioRef}
-                  duration={duration}
-                />
-              </div>
             </div>
-            <audio ref={audioRef} />
           </div>
-        </BeatsProvider>
+          <audio ref={audioRef} />
+        </div>
       </ThemeProvider>
     </Router>
   );

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import type { Track } from '../types/Track';
 import { useBeats } from '../contexts/BeatsContext';
 import type { Beat } from '../types/Beat';
+import { useQueue } from '../contexts/QueueContext';
 import { Play, Pause, Music2, Clock, Activity } from 'lucide-react';
 import Button from '../components/Button';
 
@@ -22,6 +23,7 @@ const AlbumDetail: React.FC<AlbumDetailProps> = ({
   const { albumName: routeAlbumName } = useParams<{ albumName: string }>();
   const albumName = propAlbumName || routeAlbumName;
   const { beats } = useBeats();
+  const { addToQueue, clearQueue } = useQueue();
 
   const albumTracks: Track[] = beats
     .filter((beat: Beat) => beat.album === albumName)
@@ -56,6 +58,11 @@ const AlbumDetail: React.FC<AlbumDetailProps> = ({
 
   const handlePlayAlbum = () => {
     if (onTrackSelect && albumTracks.length > 0) {
+      // Clear existing queue and add all album tracks
+      clearQueue();
+      albumTracks.slice(1).forEach(track => addToQueue(track));
+
+      // Play the first track
       if (isPlaying && currentTrack?.album === albumName) {
         if (currentTrack) {
           onTrackSelect(currentTrack);
