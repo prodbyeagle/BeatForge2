@@ -44,12 +44,10 @@ export const DiscordRPCSection = ({
   onSetShowBeatDetails,
   onSetCustomClientId,
 }: DiscordRPCSectionProps) => {
-  console.log('[DiscordRPCSection] Current settings:', settings.discordRPC);
 
   const showBeatDetails = settings.discordRPC?.showBeatDetails;
 
   const handleShowBeatDetailsChange = (key: string, value: boolean) => {
-    console.log('[DiscordRPCSection] Updating beat details setting:', key, value);
     onSetShowBeatDetails({
       ...showBeatDetails,
       [key]: value,
