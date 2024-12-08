@@ -90,7 +90,7 @@ const TitleBar: React.FC = () => {
         <span className="text-[10px] font-medium px-1 py-0.5 
                       rounded bg-[var(--theme-surface)] 
                       text-[var(--theme-text)]">
-          BETA | 0.5.0
+          BETA | 0.5.3
         </span>
       </div>
 

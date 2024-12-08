@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "BeatForge"
-version = "0.5.0"
+version = "0.5.3"
 dependencies = [
  "discord-rich-presence",
  "lazy_static",
