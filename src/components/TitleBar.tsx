@@ -38,9 +38,7 @@ const TitleBar: React.FC = () => {
         >
           <X
             size={8}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                    opacity-0 group-hover:opacity-50 text-black 
-                    transition-opacity duration-200"
+            className="absolute text-black transition-opacity duration-200 transform -translate-x-1/2 -translate-y-1/2 opacity-0 top-1/2 left-1/2 group-hover:opacity-50"
           />
         </button>
         <button
@@ -53,9 +51,7 @@ const TitleBar: React.FC = () => {
         >
           <Minimize2
             size={8}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                    opacity-0 group-hover:opacity-50 text-black 
-                    transition-opacity duration-200"
+            className="absolute text-black transition-opacity duration-200 transform -translate-x-1/2 -translate-y-1/2 opacity-0 top-1/2 left-1/2 group-hover:opacity-50"
           />
         </button>
         <button
@@ -68,9 +64,7 @@ const TitleBar: React.FC = () => {
         >
           <Maximize2
             size={8}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                    opacity-0 group-hover:opacity-50 text-black 
-                    transition-opacity duration-200"
+            className="absolute text-black transition-opacity duration-200 transform -translate-x-1/2 -translate-y-1/2 opacity-0 top-1/2 left-1/2 group-hover:opacity-50"
           />
         </button>
       </div>
@@ -89,8 +83,8 @@ const TitleBar: React.FC = () => {
         </span>
         <span className="text-[10px] font-medium px-1 py-0.5 
                       rounded bg-[var(--theme-surface)] 
-                      text-[var(--theme-text)]">
-          BETA | 0.5.3
+                      text-[var(--theme-text)] hover:bg-[var(--theme-surface-hover)] duration-300 transition-all">
+          0.5.3 (INDEV)
         </span>
       </div>
 
